@@ -1,8 +1,9 @@
 #!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
 
-#Calculates Reynolds Number and thermal conductivity for a simple tube model
-#Version 1, Nov 2018
+#Calculates Reynolds Number and thermal conductivity for a simple tube mode
+#Update: added possibility to calucalte system with parallel tubes (if they have the same diameter). New model assumes, that the power load is equaly distributetd
+#Version 1.1, Dec 2018
 #David Just, Paul Scherrer Institut
 #david.just@psi.ch
 
@@ -19,16 +20,21 @@ mue_water = nue_water / roh_water #m**2/s kinetic viscosity
 
 
 #Boundary conditions if 0 it will be calculated, set according to machine
-P = 3900.0 #J/s = W heating power 
-d= 0.004 #m diameter of water tube
+P0= 3900.0 #J/s = W heating power 
+d= 0.0035 #m diameter of water tube
 r= d/2
-l= 12*0.220 #m length of water tube
+l= 2*0.220 #m length of water tube in series e.g. if you have two parallel tube with a length l each enter l
 A= r**2*math.pi #m**2 cross section
 T_i = 25.0 #°C water inlet temperature
+n= 6 # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
+P= P0/n #power divided into parallel tubes
+
+
 
 #choose which parameter should be calculated (set to False if it should be calculated)
-delta_T = 40.0 # K difference between inlet and outlet temperature, set to False to calculate delta T
-v_flow_l = False #Volume flow  of the water in l/min, set to False to calculate volume current in l/min
+delta_T = False # K difference between inlet and outlet temperature, set to False to calculate delta T
+v_flow_l_n = 6 #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
+v_flow_l= v_flow_l_n/n #Volume flow  of the water in l/min through one single tube
 model= 'Wagner' #Select a calculation model. Available models are:
 #'Wagner'         = DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
 #'Gnielinski'     = Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
@@ -40,7 +46,8 @@ def calc_water_flow_from_deltaT(P,Cp,roh,delta_T):
     m_flow = P/(Cp*delta_T) #kg/s mass flow needed to cool heating power P
     v_flow = m_flow/roh #m**3/s volume flow needed to cool heating power P
     v_flow_l = v_flow*1000.0*60 #l/min volume flow in liter
-    print "Flow needed is:                          " +str(round(v_flow_l,1)) +" l/min"
+    v_flow_l_n = v_flow_l*n
+    print "Flow needed is:                          " +str(round(v_flow_l_n,1)) +" l/min"
     return v_flow
 
 def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
@@ -50,31 +57,31 @@ def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
     return delta_T
 
 def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0):
-#calculate dracy frition factor lambda_tube (Rohrreibungszahl)
+#calculate Dracy frition factor lambda_tube (Rohrreibungszahl)
 #Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=6&ved=2ahUKEwit1rHWqvzeAhWBl4sKHbMRBooQFjAFegQICRAC&url=http%3A%2F%2Fformeln.technis.ch%2FFormelsammlungen%2FFORMELNSAMMLUNG%2520STROMUNGSLEHRE1.pdf&usg=AOaw230lwH_PbpJvZ5VC3nbCQJ
     lambda_tube = 0.0
     if Re*(k/d) <= 65: #hydraulic flat surface
         if Re >= 2320 and Re <= 1e5:
-            lambda_tube = 0.3164*Re**(-0.25) #darcy friction factor
-            print colored('darcy friction factor calculated after Blasius','blue')
+            lambda_tube = 0.3164*Re**(-0.25) #Darcy friction factor
+            print colored('Darcy friction factor calculated after Blasius','blue')
         elif Re > 1e5 and Re <= 5*e6:
-            lambda_tube = 0.0032*+0.221*Re**(-0.237) #darcy friction factor
-            print colored('darcy friction factor calculated after Nikuradse','blue')
+            lambda_tube = 0.0032*+0.221*Re**(-0.237) #Darcy friction factor
+            print colored('Darcy friction factor calculated after Nikuradse','blue')
         elif Re >= 1e6:
             #1/lambda_tube_Srt = 1/(2*math.log10(Re*lambda_tube_Srt) - 0.8 #darcy friction factor
             print colored('function to calculate darcy friction factor is not implemented. Try to lower Re or implement iterative solver','red')
             return none
     elif Re*(k/d) > 65 and Re*(k/d) <= 1300: #Uebergangsbereich
-        print colored('function to calculate darcy friction factor is not implemented. Try to lower Re or implement iterative solver','red')
+        print colored('function to calculate Darcy friction factor is not implemented. Try to lower Re or implement iterative solver','red')
     elif Re*(k/d) > 1300: #hydraulic rough surface
-        lambda_tube = 0.0055+0.15(k/d)**(1/3)#darcy friction factor
-        print colored('darcy friction factor calculated after Moody','blue')
-    delta_p = lambda_tube*L/d*roh/2*omega**2 # Pa pressure loss in tube
+        lambda_tube = 0.0055+0.15(k/d)**(1/3)#Darcy friction factor
+        print colored('Darcy friction factor calculated after Moody','blue')
+    delta_p = lambda_tube*L/d*roh/2*omega**2 # Pa pressure loss in one tube
     return delta_p
 
 
-if v_flow_l:
-    print colored('volume flow ('+str(v_flow_l)+' l/min) is given, delta T will be calculated','blue')
+if v_flow_l_n:
+    print colored('volume flow ('+str(v_flow_l_n)+' l/min) is given, delta T will be calculated','blue')
     v_flow = v_flow_l/(1000.0*60) #volume flow of the water in m**3/s
     delta_T = calc_deltaT_from_volumeFlow(P,Cp_water,roh_water,v_flow)
 else:
@@ -148,8 +155,7 @@ print "The average wall temperature is          " +str(round(T_1,1)) +" °C"
 print "The outlet wall temperature is           " +str(round(T_1-T_av+T_o,1)) +" °C"
 print "The inlet wall temperature is            " +str(round(T_1-T_av+T_i,1)) +" °C"
 
-delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000 #pressure loss in tube in bar
+delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000/n #pressure loss in tube in bar for all parallel tubes
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
 if delta_p > 4:
-    print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red')
-
+    print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
