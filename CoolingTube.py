@@ -1,9 +1,11 @@
 #!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
 
-#Calculates Reynolds Number and thermal conductivity for a simple tube mode
-#Update: added possibility to calucalte system with parallel tubes (if they have the same diameter). New model assumes, that the power load is equaly distributetd
-#Version 1.1, Dec 2018
+#Calculates Reynolds Number and thermal conductivity for a simple tube mode. The model assumes, that the power load is equaly distributetd
+#Updates: 
+#added possibility to calucalte system with parallel tubes (if they have the same diameter). 
+#added outside walltemperature to output 
+#Version 1.2, Dec 2018
 #David Just, Paul Scherrer Institut
 #david.just@psi.ch
 
@@ -18,15 +20,23 @@ lambda_water = 0.598 #W/(m*K) thermal conductivity
 nue_water = 890.45e-6 #kg/(m*s) dynamic viscosity at 25 °C
 mue_water = nue_water / roh_water #m**2/s kinetic viscosity
 
+#Constants Machine
+lambda_solid = 390 #W/(m*K) thermal conductivty of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
+T_amb = 25 # C ambient Temperature
+thickness = 0.007 #m thickness of the material between fluid and power in
+width = 0.068 #m width on which the power is applied
+length = 0.220 #m width on which the power is applied
+area = width*length  #m**2 are on which the power is applied
 
 #Boundary conditions if 0 it will be calculated, set according to machine
-P0= 3900.0 #J/s = W heating power 
+P0= 4000 #J/s = W heating power 
 d= 0.0035 #m diameter of water tube
-r= d/2
 l= 2*0.220 #m length of water tube in series e.g. if you have two parallel tube with a length l each enter l
-A= r**2*math.pi #m**2 cross section
-T_i = 25.0 #°C water inlet temperature
 n= 6 # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
+T_i = 26.0 #°C water inlet temperature
+
+r= d/2
+A= r**2*math.pi #m**2 cross section
 P= P0/n #power divided into parallel tubes
 
 
@@ -79,6 +89,9 @@ def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0):
     delta_p = lambda_tube*L/d*roh/2*omega**2 # Pa pressure loss in one tube
     return delta_p
 
+def calc_outside_wall_temp(d,A,lamda_solid,P,T_innerWall):
+    T_outherWall= P*d/(lamda_solid*A)+T_innerWall
+    return T_outherWall
 
 if v_flow_l_n:
     print colored('volume flow ('+str(v_flow_l_n)+' l/min) is given, delta T will be calculated','blue')
@@ -152,10 +165,16 @@ alpha= Nu*lambda_water/d
 print "The heat transfer coefficient Alpha is:  " +str(round(alpha,1))+" W/(m**2*K)"
 T_1 = P/(d*math.pi*l*alpha) +T_av
 print "The average wall temperature is          " +str(round(T_1,1)) +" °C"
-print "The outlet wall temperature is           " +str(round(T_1-T_av+T_o,1)) +" °C"
+if T_1-T_av+T_o < 100:
+    print colored("The inner outlet wall temperature is     " +str(round(T_1-T_av+T_o,1)) +" °C",'green')
+else:
+    print colored("The inner outlet wall temperature is     " +str(round(T_1-T_av+T_o,1)) +" °C",'red')
 print "The inlet wall temperature is            " +str(round(T_1-T_av+T_i,1)) +" °C"
 
 delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000/n #pressure loss in tube in bar for all parallel tubes
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
 if delta_p > 4:
     print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
+T_outherWall = calc_outside_wall_temp(thickness,area,lambda_solid,P*n,T_1-T_av+T_o)
+print "The outside wall temperature is          " +str(round(T_outherWall,1)) +" °C"
+
