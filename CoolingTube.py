@@ -1,11 +1,12 @@
 #!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
 
-#Calculates Reynolds Number and thermal conductivity for a simple tube mode. The model assumes, that the power load is equaly distributetd
+#Calculates Reynolds Number and thermal conductivity for a simple tube mode. The model assumes, that the power load is equally distributed
 #Updates: 
-#added possibility to calucalte system with parallel tubes (if they have the same diameter). 
-#added outside walltemperature to output 
-#Version 1.2, Dec 2018
+#added possibility to caluclate system with parallel tubes (if they have the same diameter). 
+#added outside wall temperature to output 
+#added calculation for thermal radiation
+#Version 1.3, Dec 2018
 #David Just, Paul Scherrer Institut
 #david.just@psi.ch
 
@@ -13,42 +14,48 @@ from __future__ import division
 from termcolor import colored
 import math
 
+########################################################################
+#CONFIGURATION SECTION
+
 #Constants Water
 roh_water = 997.05 # kg/m**3 density at 25 °C
 Cp_water = 4179.0 #J/(kg*K) thermal capacity
 lambda_water = 0.598 #W/(m*K) thermal conductivity
 nue_water = 890.45e-6 #kg/(m*s) dynamic viscosity at 25 °C
-mue_water = nue_water / roh_water #m**2/s kinetic viscosity
 
-#Constants Machine
-lambda_solid = 390 #W/(m*K) thermal conductivty of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
-T_amb = 25 # C ambient Temperature
+#Constants Solid
+lambda_solid = 390 #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
+epsylon_solid = 0.6 #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
 thickness = 0.007 #m thickness of the material between fluid and power in
-width = 0.068 #m width on which the power is applied
-length = 0.220 #m width on which the power is applied
-area = width*length  #m**2 are on which the power is applied
+width = 4*0.00235 #m width on which the power is applied
+length = 4*0.02901 #m width on which the power is applied
 
 #Boundary conditions if 0 it will be calculated, set according to machine
 P0= 4000 #J/s = W heating power 
-d= 0.0035 #m diameter of water tube
-l= 2*0.220 #m length of water tube in series e.g. if you have two parallel tube with a length l each enter l
+d= 0.003 #m diameter of water tube
+l= 2*0.22 #m length of water tube in series e.g. if you have two parallel tube with a length l each enter l
 n= 6 # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
-T_i = 26.0 #°C water inlet temperature
-
-r= d/2
-A= r**2*math.pi #m**2 cross section
-P= P0/n #power divided into parallel tubes
-
-
+T_i = 25 #°C water inlet temperature
 
 #choose which parameter should be calculated (set to False if it should be calculated)
 delta_T = False # K difference between inlet and outlet temperature, set to False to calculate delta T
 v_flow_l_n = 6 #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
-v_flow_l= v_flow_l_n/n #Volume flow  of the water in l/min through one single tube
 model= 'Wagner' #Select a calculation model. Available models are:
 #'Wagner'         = DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
 #'Gnielinski'     = Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
 #'Dittus_Boelter' = Dittus-Boelter equation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
+
+
+#CONFIGURATION ENDS HERE
+############################################################################
+
+r= d/2
+A= r**2*math.pi #m**2 cross section of the water tube
+area = width*length  #m**2 are on which the power is applied
+P= P0/n #power divided into parallel tubes
+v_flow_l= v_flow_l_n/n #Volume flow  of the water in l/min through one single tube
+mue_water = nue_water / roh_water #m**2/s kinetic viscosity
+BoltzmannConst = 5.6704e-8 #W/(m**2*K**4), Stefan Boltzmann Constant
 
 
 def calc_water_flow_from_deltaT(P,Cp,roh,delta_T):
@@ -67,7 +74,7 @@ def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
     return delta_T
 
 def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0):
-#calculate Dracy frition factor lambda_tube (Rohrreibungszahl)
+#calculate Dracy friction factor lambda_tube (Rohrreibungszahl)
 #Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=6&ved=2ahUKEwit1rHWqvzeAhWBl4sKHbMRBooQFjAFegQICRAC&url=http%3A%2F%2Fformeln.technis.ch%2FFormelsammlungen%2FFORMELNSAMMLUNG%2520STROMUNGSLEHRE1.pdf&usg=AOaw230lwH_PbpJvZ5VC3nbCQJ
     lambda_tube = 0.0
     if Re*(k/d) <= 65: #hydraulic flat surface
@@ -92,6 +99,11 @@ def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0):
 def calc_outside_wall_temp(d,A,lamda_solid,P,T_innerWall):
     T_outherWall= P*d/(lamda_solid*A)+T_innerWall
     return T_outherWall
+
+def calc_thermal_radiation(A,T,epsylon):
+    P_rad= epsylon*BoltzmannConst*(T**4)*A
+    return P_rad
+
 
 if v_flow_l_n:
     print colored('volume flow ('+str(v_flow_l_n)+' l/min) is given, delta T will be calculated','blue')
@@ -121,7 +133,7 @@ if omega <= 4.0 and omega >= 3.0:
 if omega >= 4.0:
     print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is dangerously high, cavities might build up','white','on_red')
 
-#calculate Reynolds Number
+#calculate Reynolds  and Prandt Number
 Re= omega*d/mue_water #dimension less
 Pr = nue_water*Cp_water/lambda_water
 
@@ -129,12 +141,13 @@ print "Prandt Number Pr is:                     " +str(round(Pr,1))
 if Pr>0.6 and Pr< 160:
     print colored("Prand Number ideal",'green')
 if Pr<0.6:
-    print colored("Prand Number too small",'mangenta','on_yellow')
+    print colored("Prand Number too small",'magenta','on_yellow')
 if Pr>160: 
     print colored("Prand Number too large", 'red')
 
 print "The Reynolds Number Re is:               "+str(round(Re,1))
 
+#calculate Nusselt Number
 if Re>3000 and Re<5e6 and model == 'Gnielinski':
     print colored("Flow conditions is turbulent; Nu will be calculated after Gnieliski. See https://en.wikipedia.org/wiki/Nusselt_number",'blue') 
     Re_staus= "Gnieliski"
@@ -156,12 +169,11 @@ elif Re<2300:
     print colored("Flow condition is laminar, Nu will be calculated after Wagner 3.28",'blue')
     Re_status= "laminar"
     Nu =3.66
-
-
-
 print "Nusselt Number Nu is: Nu =               " +str(round(Nu,1))
 
-alpha= Nu*lambda_water/d
+alpha= Nu*lambda_water/d # W/(m**2*K), heat transfer coefficient Alpha
+
+#generate output
 print "The heat transfer coefficient Alpha is:  " +str(round(alpha,1))+" W/(m**2*K)"
 T_1 = P/(d*math.pi*l*alpha) +T_av
 print "The average wall temperature is          " +str(round(T_1,1)) +" °C"
@@ -171,10 +183,18 @@ else:
     print colored("The inner outlet wall temperature is     " +str(round(T_1-T_av+T_o,1)) +" °C",'red')
 print "The inlet wall temperature is            " +str(round(T_1-T_av+T_i,1)) +" °C"
 
-delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000/n #pressure loss in tube in bar for all parallel tubes
+delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000/n #bar, pressure loss in tube in bar for all parallel tubes
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
 if delta_p > 4:
     print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
-T_outherWall = calc_outside_wall_temp(thickness,area,lambda_solid,P*n,T_1-T_av+T_o)
-print "The outside wall temperature is          " +str(round(T_outherWall,1)) +" °C"
+T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P*n,T_1-T_av+T_o)
+
+print "The max. outside wall temperature is     " +str(round(T_outherWall_max,1)) +" °C"
+P_rad = calc_thermal_radiation(area*7,T_outherWall_max+273.15,epsylon_solid) #factor area*7 accounts for cubic volume from area plus some estimated factor
+print "The power loss due to radiation is       " +str(round(P_rad,1)) +" W"
+print "The values for delta_t and for the volume flow with accounting the radiations are: "
+calc_deltaT_from_volumeFlow(P-P_rad,Cp_water,roh_water,v_flow)
+calc_water_flow_from_deltaT(P-P_rad,Cp_water,roh_water,delta_T)
+
+
 
