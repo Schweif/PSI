@@ -34,7 +34,7 @@ length = 4*0.02901 #m width on which the power is applied
 P0= 4000 #J/s = W heating power 
 d= 0.003 #m diameter of water tube
 l= 2*0.22 #m length of water tube in series e.g. if you have two parallel tube with a length l each enter l
-n= 6 # number of tubes (with the same diameter) in parallel configuration floadwing in the same direction
+n= 6 # number of tubes (with the same diameter) in parallel configuration floating in the same direction
 T_i = 25 #°C water inlet temperature
 
 #choose which parameter should be calculated (set to False if it should be calculated)
@@ -175,12 +175,13 @@ alpha= Nu*lambda_water/d # W/(m**2*K), heat transfer coefficient Alpha
 print "The heat transfer coefficient Alpha is:  " +str(round(alpha,1))+" W/(m**2*K)"
 T_chan_av = P/(d*math.pi*l*alpha) +T_av #°C average wall temperature on the surface of the fluid channel
 T_chan_max = P/(d*math.pi*l*alpha) +T_o #°C maximum wall temperature on the surface of the fluid channel
-print "The average wall temperature is          " +str(round(T_chan_av,1)) +" °C"
+T_chan_in = P/(d*math.pi*l*alpha) +T_i #°C minimum wall temperature on the surface of the fluid channel
+print "The average channel wall temperature is  " +str(round(T_chan_av,1)) +" °C"
 if T_chan_max < 100:
-    print colored("The outlet wall temperature is           " +str(round(T_chan_max,1)) +" °C",'green')
+    print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'green')
 else:
-    print colored("The outlet wall temperature is           " +str(round(T_chan_max,1)) +" °C",'red')
-print "The inlet wall temperature is            " +str(round(T_chan_av-T_av+T_i,1)) +" °C"
+    print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
+print "The inlet channel wall temperature is     " +str(round(T_chan_in,1)) +" °C"
 
 delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000/n #bar, pressure loss in tube in bar for all parallel tubes
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
