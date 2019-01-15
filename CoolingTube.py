@@ -26,9 +26,11 @@ nue_water = 890.45e-6 #kg/(m*s) dynamic viscosity at 25 °C
 #Constants Solid
 lambda_solid = 390 #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
 epsylon_solid = 0.6 #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
+k_tube = 1e-6 #m surface roughness of the cooling tube
 thickness = 0.007 #m thickness of the material between fluid and power in
 width = 4*0.00235 #m width on which the power is applied
 length = 4*0.02901 #m width on which the power is applied
+
 
 #Boundary conditions if 0 it will be calculated, set according to machine
 P0= 4000 #J/s = W heating power 
@@ -183,7 +185,7 @@ else:
     print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
 print "The inlet channel wall temperature is     " +str(round(T_chan_in,1)) +" °C"
 
-delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000/n #bar, pressure loss in tube in bar for all parallel tubes
+delta_p = calc_pressure_loss(Re,d,l,omega,roh_water,k_tube)/100000/n #bar, pressure loss in tube in bar for all parallel tubes
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
 if delta_p > 4:
     print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
