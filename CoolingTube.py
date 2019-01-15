@@ -75,7 +75,7 @@ def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
 
 def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0):
 #calculate Dracy friction factor lambda_tube (Rohrreibungszahl)
-#Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=6&ved=2ahUKEwit1rHWqvzeAhWBl4sKHbMRBooQFjAFegQICRAC&url=http%3A%2F%2Fformeln.technis.ch%2FFormelsammlungen%2FFORMELNSAMMLUNG%2520STROMUNGSLEHRE1.pdf&usg=AOaw230lwH_PbpJvZ5VC3nbCQJ
+#Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; http://formeln.technis.ch/Formelsammlungen/FORMELNSAMMLUNG%20STROMUNGSLEHRE1.pdf
     lambda_tube = 0.0
     if Re*(k/d) <= 65: #hydraulic flat surface
         if Re >= 2320 and Re <= 1e5:
