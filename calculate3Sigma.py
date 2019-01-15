@@ -13,9 +13,9 @@ from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
 
 
-DataRaw =  '/home/just/Documents/t1.dta'
+DataRaw =  '/home/just/Documents/powerdensity.dat'
 import numpy as np #did not work on first imort doing it twice instead
-da= np.genfromtxt(DataRaw,skip_header=10, usecols=(0, 1, 2))
+da= np.genfromtxt(DataRaw,skip_header=2, usecols=(0, 1, 2))
 
 xdata= da[:,0]
 ydata= da[:,1]
@@ -107,15 +107,14 @@ def FitAndPlot2DGauss(axis):
     plt.plot(x, Gauss(x, *popt), 'r-', label='fit')
     plt.legend()
     plt.title(axis+' Axis')
-    plt.xlabel('Time (s)')
-    plt.ylabel('FluxDens (V)')
+    plt.xlabel('length (mm)')
+    plt.ylabel('PowerDens (W/mm**2)')
     plt.text(0,1, "mean = " +str(mean) +"\nsigma = " +str(sigma), fontsize=12)
     plt.show()
 
     
 FitAndPlot2DGauss('x')
 FitAndPlot2DGauss('y')
-
 
 
 
