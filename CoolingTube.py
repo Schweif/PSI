@@ -75,17 +75,36 @@ def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
     print "delta T needed is:                       " +str(round(delta_T,1)) +" K"
     return delta_T
 
-def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0):
+def calc_zeta(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0,bend_angle=0):
+    #www.uni-magdeburg.de/isut/LSS/Lehre/Arbeitsheft/VIII.pdf    
+    Cang = 0.0 # Constant adapting for bending angle,    
+    if bend_angle <= 30.0 :
+        Cang = 0.1
+    elif bend_angle > 30.0 and bend_angle <= 45.0:
+        Cang = 0.135
+    elif bend_angle > 45.0 and bend_angel <= 60.0:
+        Cang = 0.17
+    elif bend_angle > 60.0 and bend_angel <= 90.0:
+        Cang = 0.21
+    elif bend_angle > 90.0 and bend_angel <= 200.0:
+        Cang = 0.24
+    elif bend_angle > 200.0:
+        Cang = 0.26
+
+
+def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0,bend_angle=0):
 #calculate Dracy friction factor lambda_tube (Rohrreibungszahl)
 #Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; http://formeln.technis.ch/Formelsammlungen/FORMELNSAMMLUNG%20STROMUNGSLEHRE1.pdf
-    lambda_tube = 0.0
+    lambda_tube = 0.0 #Darcy friction factor
     if Re*(k/d) <= 65: #hydraulic flat surface
         if Re >= 2320 and Re <= 1e5:
             lambda_tube = 0.3164*Re**(-0.25) #Darcy friction factor
             print colored('Darcy friction factor calculated after Blasius','blue')
+
         elif Re > 1e5 and Re <= 5*e6:
             lambda_tube = 0.0032*+0.221*Re**(-0.237) #Darcy friction factor
             print colored('Darcy friction factor calculated after Nikuradse','blue')
+            Cre = 1
         elif Re >= 1e6:
             #1/lambda_tube_Srt = 1/(2*math.log10(Re*lambda_tube_Srt) - 0.8 #darcy friction factor
             print colored('function to calculate darcy friction factor is not implemented. Try to lower Re or implement iterative solver','red')
@@ -197,6 +216,3 @@ print "The power loss due to radiation is       " +str(round(P_rad,1)) +" W"
 print "The values for delta_t and for the volume flow with accounting the radiations are: "
 calc_deltaT_from_volumeFlow(P-P_rad,Cp_water,roh_water,v_flow)
 calc_water_flow_from_deltaT(P-P_rad,Cp_water,roh_water,delta_T)
-
-
-
