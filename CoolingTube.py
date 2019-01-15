@@ -34,12 +34,12 @@ T_i = 25                            #°C water inlet temperature
 #Setup of the cooled device
 thickness = 0.007                   #m thickness of the material between fluid and power in
 width = 4*0.00235                   #m irradiation width on which the power is applied
-length = 4*0.02901                  #m irradiation width on which the power is applied
+length = 4*0.02901                  #m irradiation length on which the power is applied
 
 #Setup of the cooling channel
 d= 0.003                            #m diameter of water tube
 l= 2*0.22                           #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
-n= 6                                # number of tubes (with the same diameter) in parallel configuration fowing in the same direction
+n= 6                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
 
 
 #choose which parameter should be calculated (set to False if it should be calculated)
@@ -63,7 +63,7 @@ mue_water = nue_water / roh_water   #m**2/s kinetic viscosity
 BoltzmannConst = 5.6704e-8          #W/(m**2*K**4), Stefan Boltzmann Constant
 
 
-def calc_water_flow_from_deltaT(P,Cp,roh,delta_T):
+def calc_water_flow_from_deltaT(P,Cp,roh,delta_T):λ_solid
     m_flow = P/(Cp*delta_T)         #kg/s mass flow needed to cool heating power P
     v_flow = m_flow/roh             #m**3/s volume flow needed to cool heating power P
     v_flow_l = v_flow*1000.0*60     #l/min volume flow in liter
