@@ -41,6 +41,9 @@ d= 0.003                            #m diameter of water tube
 l= 2*0.22                           #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
 n= 6                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
 k_tube = 1e-6                       #m surface roughness of the cooling tube
+n_bends = 0                          # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
+r_bend = 1                          #m bending radius of bends inside the cooling channel
+bend_angle = 0                      #° bending angle of bends inside the cooling channel
 
 #choose which parameter should be calculated (set to False if it should be calculated)
 delta_T = False                     # K difference between inlet and outlet temperature, set to False to calculate delta T
@@ -77,9 +80,11 @@ def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
     print "delta T needed is:                       " +str(round(delta_T,1)) +" K"
     return delta_T
 
-def calc_zeta(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0,bend_angle=0):
-    #www.uni-magdeburg.de/isut/LSS/Lehre/Arbeitsheft/VIII.pdf    
-    Cang = 0.0 # Constant adapting for bending angle,    
+def calc_pressure_loss_due_to_bends(Re,d,omega,roh,k_tube=0,n_bends=0,r_bend=1,bend_angle=0):
+    #www.uni-magdeburg.de/isut/LSS/Lehre/Arbeitsheft/VIII.pdf p.7  
+    Cang = 0.0                      #Constant adapting for bending angle
+    Cre = 0.0                       #Constant adapting for Reynolds number
+    Crou = 0.0                      #Constant abapting for surface roughtness
     if bend_angle <= 30.0 :
         Cang = 0.1
     elif bend_angle > 30.0 and bend_angle <= 45.0:
@@ -92,29 +97,46 @@ def calc_zeta(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0,bend_angle=0):
         Cang = 0.24
     elif bend_angle > 200.0:
         Cang = 0.26
+    if Re > 3e3 and Re < 1e5:
+        Cre = 20.2*Re**(-0.25)
+    if Re > 1e5:
+        Cre = 1
+    if Re > 4e4:
+        if 0 < k_tube/d and k_tube/d < 0.47*Re**(-0.75):
+            Crou = 1.0
+        if 0.47*Re**(-0.75) < k_tube/d and k_tube/d < 1e-3:
+            Crou = 1+k_tube/d*1e3
+        if k_tube/d > 1000:
+            Crou = 2
+    zeta = (Cang*Cre*Crou)/((r_bend/d)**(-0.5))
+    if zeta == 0:
+        print colored("The pressure loss due to bends could not be calculated","blue")
+    delta_p_bends = zeta*roh*0.5*omega**2*n_bends
+    return delta_p_bends
 
-
-def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0,bend_angle=0):
+def calc_pressure_loss(Re,d,L,omega,roh,k_tube=0,n_bends=0,r_bend=1,bend_angle=0):
 #calculate Dracy friction factor lambda_tube (Rohrreibungszahl)
 #Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; http://formeln.technis.ch/Formelsammlungen/FORMELNSAMMLUNG%20STROMUNGSLEHRE1.pdf
-    lambda_tube = 0.0 #Darcy friction factor
-    if Re*(k/d) <= 65: #hydraulic flat surface
+    lambda_tube = 0.0                                   #Darcy friction factor
+    if Re*(k_tube/d) <= 65:                             #hydraulic flat surface
         if Re >= 2320 and Re <= 1e5:
-            lambda_tube = 0.3164*Re**(-0.25) #Darcy friction factor
+            lambda_tube = 0.3164*Re**(-0.25)
             print colored('Darcy friction factor calculated after Blasius','blue')
         elif Re > 1e5 and Re <= 5*e6:
-            lambda_tube = 0.0032*+0.221*Re**(-0.237) #Darcy friction factor
+            lambda_tube = 0.0032*+0.221*Re**(-0.237)
             print colored('Darcy friction factor calculated after Nikuradse','blue')
         elif Re >= 1e6:
-            #1/lambda_tube_Srt = 1/(2*math.log10(Re*lambda_tube_Srt) - 0.8 #darcy friction factor
+            #1/lambda_tube_Srt = 1/(2*math.log10(Re*lambda_tube_Srt) - 0.8
             print colored('function to calculate Darcy Friction factor is not implemented. Try to lower Re or implement iterative solver','red')
             return none
-    elif Re*(k/d) > 65 and Re*(k/d) <= 1300: #Uebergangsbereich
+    elif Re*(k_tube/d) > 65 and Re*(k_tube/d) <= 1300:   #Uebergangsbereich
         print colored('function to calculate Darcy Friction Factor is not implemented. Try to lower Re or implement iterative solver','red')
-    elif Re*(k/d) > 1300:           #hydraulic rough surface
-        lambda_tube = 0.0055+0.15(k/d)**(1/3)#Darcy friction factor
+    elif Re*(k_tube/d) > 1300:                           #hydraulic rough surface
+        lambda_tube = 0.0055+0.15(k_tube/d)**(1/3)
         print colored('Darcy Friction Factor calculated after Moody','blue')
-    delta_p = lambda_tube*L/d*roh/2*omega**2 # Pa pressure loss in one tube
+    delta_p = lambda_tube*L/d*roh/2*omega**2             #Pa pressure loss in one tube
+    delta_p_bends = calc_pressure_loss_due_to_bends(Re,d,omega,roh,k_tube,n_bends,r_bend,bend_angle)
+    delta_p = delta_p + delta_p_bends
     return delta_p
 
 def calc_outside_wall_temp(d,A,lamda_solid,P,T_innerWall):
@@ -142,7 +164,7 @@ T_av = (T_i+T_o)/2                  #°C average water Temp
 
 
 
-omega= v_flow/A #m/s flow speed of water
+omega= v_flow/A                     #m/s flow speed of water
 if omega <= 1.5:
     print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nIdeal velocity in terms of vibrations','green')
 if omega <= 3.0 and omega >= 1.5:
@@ -153,7 +175,7 @@ if omega >= 4.0:
     print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is dangerously high, cavities might build up','white','on_red')
 
 #calculate Reynolds  and Prandt Number
-Re= omega*d/mue_water #dimension less
+Re= omega*d/mue_water               #dimension less
 Pr = nue_water*Cp_water/lambda_water
 
 print "Prandt Number Pr is:                     " +str(round(Pr,1))
@@ -190,13 +212,13 @@ elif Re<2300:
     Nu = 3.66
 print "Nusselt Number Nu is: Nu =               " +str(round(Nu,1))
 
-alpha= Nu*lambda_water/d            # W/(m**2*K), heat transfer coefficient Alpha
-T_chan_av = P/(d*math.pi*l*alpha) +T_av #°C average wall temperature on the surface of the fluid channel
-T_chan_max = P/(d*math.pi*l*alpha) +T_o #°C maximum wall temperature on the surface of the fluid channel
-T_chan_in = P/(d*math.pi*l*alpha) +T_i #°C minimum wall temperature on the surface of the fluid channel
-delta_p = calc_pressure_loss(Re,d,l,omega,roh_water)/100000/n #bar, pressure loss in tube in bar for all parallel tubes
+alpha= Nu*lambda_water/d                                                        #W/(m**2*K), heat transfer coefficient Alpha
+T_chan_av = P/(d*math.pi*l*alpha) +T_av                                         #°C average wall temperature on the surface of the fluid channel
+T_chan_max = P/(d*math.pi*l*alpha) +T_o                                         #°C maximum wall temperature on the surface of the fluid channel
+T_chan_in = P/(d*math.pi*l*alpha) +T_i                                          #°C minimum wall temperature on the surface of the fluid channel
+delta_p = calc_pressure_loss(Re,d,l,omega,roh_water,k_tube,n_bends,r_bend,bend_angle)/100000/n                   #bar, pressure loss in tube in bar for all parallel tubes
 T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_max)
-P_rad = calc_thermal_radiation(area*7,T_outherWall_max+273.15,epsylon_solid) #factor area*7 accounts for cubic volume from area plus some estimated factor
+P_rad = calc_thermal_radiation(area*7,T_outherWall_max+273.15,epsylon_solid)    #factor area*7 accounts for cubic volume from area plus some estimated factor
 
 #generate output
 print "The heat transfer coefficient Alpha is:  " +str(round(alpha,1))+" W/(m**2*K)"
@@ -206,8 +228,6 @@ if T_chan_max < 100:
 else:
     print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
 print "The inlet channel wall temperature is     " +str(round(T_chan_in,1)) +" °C"
-
-delta_p = calc_pressure_loss(Re,d,l,omega,roh_water,k_tube)/100000/n #bar, pressure loss in tube in bar for all parallel tubes
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
 if delta_p > 4:
     print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
