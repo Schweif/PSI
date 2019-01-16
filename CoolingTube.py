@@ -142,7 +142,7 @@ T_av = (T_i+T_o)/2                  #°C average water Temp
 
 
 
-omega= v_flow/A                     #m/s flow speed of water
+omega= v_flow/A #m/s flow speed of water
 if omega <= 1.5:
     print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nIdeal velocity in terms of vibrations','green')
 if omega <= 3.0 and omega >= 1.5:
@@ -153,7 +153,7 @@ if omega >= 4.0:
     print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is dangerously high, cavities might build up','white','on_red')
 
 #calculate Reynolds  and Prandt Number
-Re= omega*d/mue_water               #dimension less
+Re= omega*d/mue_water #dimension less
 Pr = nue_water*Cp_water/lambda_water
 
 print "Prandt Number Pr is:                     " +str(round(Pr,1))
