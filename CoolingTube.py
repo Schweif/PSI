@@ -17,6 +17,10 @@ import math
 ########################################################################
 #CONFIGURATION SECTION
 
+#Boundary conditions, set according to machine
+P0= 4000                            #J/s = W heating power
+T_i = 25                            #°C water inlet temperature
+
 #Constants Water
 roh_water = 997.05                  #kg/m**3 density at 25 °C
 Cp_water = 4179.0                   #J/(kg*K) thermal capacity
@@ -27,10 +31,6 @@ nue_water = 890.45e-6               #kg/(m*s) dynamic viscosity at 25 °C
 lambda_solid = 390                  #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
 epsylon_solid = 0.6                 #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
 
-#Boundary conditions, set according to machine
-P0= 4000                            #J/s = W heating power
-T_i = 25                            #°C water inlet temperature
-
 #Setup of the cooled device
 thickness = 0.007                   #m thickness of the material between fluid and power in
 width = 4*0.00235                   #m irradiation width on which the power is applied
@@ -40,7 +40,7 @@ length = 4*0.02901                  #m irradiation length on which the power is 
 d= 0.003                            #m diameter of water tube
 l= 2*0.22                           #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
 n= 6                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
-
+k_tube = 1e-6                       #m surface roughness of the cooling tube
 
 #choose which parameter should be calculated (set to False if it should be calculated)
 delta_T = False                     # K difference between inlet and outlet temperature, set to False to calculate delta T
@@ -63,7 +63,7 @@ mue_water = nue_water / roh_water   #m**2/s kinetic viscosity
 BoltzmannConst = 5.6704e-8          #W/(m**2*K**4), Stefan Boltzmann Constant
 
 
-def calc_water_flow_from_deltaT(P,Cp,roh,delta_T):λ_solid
+def calc_water_flow_from_deltaT(P,Cp,roh,delta_T):
     m_flow = P/(Cp*delta_T)         #kg/s mass flow needed to cool heating power P
     v_flow = m_flow/roh             #m**3/s volume flow needed to cool heating power P
     v_flow_l = v_flow*1000.0*60     #l/min volume flow in liter
@@ -77,17 +77,34 @@ def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
     print "delta T needed is:                       " +str(round(delta_T,1)) +" K"
     return delta_T
 
-def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0):
+def calc_zeta(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0,bend_angle=0):
+    #www.uni-magdeburg.de/isut/LSS/Lehre/Arbeitsheft/VIII.pdf    
+    Cang = 0.0 # Constant adapting for bending angle,    
+    if bend_angle <= 30.0 :
+        Cang = 0.1
+    elif bend_angle > 30.0 and bend_angle <= 45.0:
+        Cang = 0.135
+    elif bend_angle > 45.0 and bend_angel <= 60.0:
+        Cang = 0.17
+    elif bend_angle > 60.0 and bend_angel <= 90.0:
+        Cang = 0.21
+    elif bend_angle > 90.0 and bend_angel <= 200.0:
+        Cang = 0.24
+    elif bend_angle > 200.0:
+        Cang = 0.26
+
+
+def calc_pressure_loss(Re,d,L,omega,roh,k=0,n_bends=0,r_bend=0,bend_angle=0):
 #calculate Dracy friction factor lambda_tube (Rohrreibungszahl)
-#Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=6&ved=2ahUKEwit1rHWqvzeAhWBl4sKHbMRBooQFjAFegQICRAC&url=http%3A%2F%2Fformeln.technis.ch%2FFormelsammlungen%2FFORMELNSAMMLUNG%2520STROMUNGSLEHRE1.pdf&usg=AOaw230lwH_PbpJvZ5VC3nbCQJ
-    lambda_tube = 0.0
-    if Re*(k/d) <= 65:              #hydraulic flat surface
+#Formulas form: HTBL-Kapfenberg Druckverlust in Rohrleitungen; http://formeln.technis.ch/Formelsammlungen/FORMELNSAMMLUNG%20STROMUNGSLEHRE1.pdf
+    lambda_tube = 0.0 #Darcy friction factor
+    if Re*(k/d) <= 65: #hydraulic flat surface
         if Re >= 2320 and Re <= 1e5:
             lambda_tube = 0.3164*Re**(-0.25) #Darcy friction factor
-            print colored('Darcy Friction Factor calculated after Blasius','blue')
+            print colored('Darcy friction factor calculated after Blasius','blue')
         elif Re > 1e5 and Re <= 5*e6:
             lambda_tube = 0.0032*+0.221*Re**(-0.237) #Darcy friction factor
-            print colored('Darcy Friction Factor calculated after Nikuradse','blue')
+            print colored('Darcy friction factor calculated after Nikuradse','blue')
         elif Re >= 1e6:
             #1/lambda_tube_Srt = 1/(2*math.log10(Re*lambda_tube_Srt) - 0.8 #darcy friction factor
             print colored('function to calculate Darcy Friction factor is not implemented. Try to lower Re or implement iterative solver','red')
@@ -189,6 +206,8 @@ if T_chan_max < 100:
 else:
     print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
 print "The inlet channel wall temperature is     " +str(round(T_chan_in,1)) +" °C"
+
+delta_p = calc_pressure_loss(Re,d,l,omega,roh_water,k_tube)/100000/n #bar, pressure loss in tube in bar for all parallel tubes
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
 if delta_p > 4:
     print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
@@ -197,6 +216,3 @@ print "The power loss due to radiation is       " +str(round(P_rad,1)) +" W"
 print "The values for delta_t and for the volume flow with accounting for the radiation are: "
 calc_deltaT_from_volumeFlow(P-P_rad,Cp_water,roh_water,v_flow)
 calc_water_flow_from_deltaT(P-P_rad,Cp_water,roh_water,delta_T)
-
-
-
