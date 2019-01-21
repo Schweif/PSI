@@ -6,7 +6,8 @@
 #added possibility to caluclate system with parallel tubes (if they have the same diameter). 
 #added outside wall temperature to output 
 #added calculation for thermal radiation
-#Version 1.3, Dec 2018
+#added pressure loss due to bends
+#Version 1.4, Jan 2019
 #David Just, Paul Scherrer Institut
 #david.just@psi.ch
 
@@ -41,9 +42,9 @@ d= 0.003                            #m diameter of water tube
 l= 2*0.22                           #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
 n= 6                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
 k_tube = 1e-6                       #m surface roughness of the cooling tube
-n_bends = 0                          # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
-r_bend = 1                          #m bending radius of bends inside the cooling channel
-bend_angle = 0                      #° bending angle of bends inside the cooling channel
+n_bends = 2                         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
+r_bend = 0.005                         #m bending radius of bends inside the cooling channel
+bend_angle = 90                      #° bending angle of bends inside the cooling channel
 
 #choose which parameter should be calculated (set to False if it should be calculated)
 delta_T = False                     # K difference between inlet and outlet temperature, set to False to calculate delta T
@@ -89,11 +90,11 @@ def calc_pressure_loss_due_to_bends(Re,d,omega,roh,k_tube=0,n_bends=0,r_bend=1,b
         Cang = 0.1
     elif bend_angle > 30.0 and bend_angle <= 45.0:
         Cang = 0.135
-    elif bend_angle > 45.0 and bend_angel <= 60.0:
+    elif bend_angle > 45.0 and bend_angle <= 60.0:
         Cang = 0.17
-    elif bend_angle > 60.0 and bend_angel <= 90.0:
+    elif bend_angle > 60.0 and bend_angle <= 90.0:
         Cang = 0.21
-    elif bend_angle > 90.0 and bend_angel <= 200.0:
+    elif bend_angle > 90.0 and bend_angle <= 200.0:
         Cang = 0.24
     elif bend_angle > 200.0:
         Cang = 0.26
@@ -108,7 +109,12 @@ def calc_pressure_loss_due_to_bends(Re,d,omega,roh,k_tube=0,n_bends=0,r_bend=1,b
             Crou = 1+k_tube/d*1e3
         if k_tube/d > 1000:
             Crou = 2
+    if Re < 4e4 and Re > 4e3:
+            Crou = 0.8
     zeta = (Cang*Cre*Crou)/((r_bend/d)**(-0.5))
+    #print "Cang: " +str(Cang)
+    #print "Cre: " +str(Cre)
+    #print "Crou: " +str(Crou)
     if zeta == 0:
         print colored("The pressure loss due to bends could not be calculated","blue")
     delta_p_bends = zeta*roh*0.5*omega**2*n_bends
@@ -227,7 +233,7 @@ if T_chan_max < 100:
     print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'green')
 else:
     print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
-print "The inlet channel wall temperature is     " +str(round(T_chan_in,1)) +" °C"
+print "The inlet channel wall temperature is    " +str(round(T_chan_in,1)) +" °C"
 print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
 if delta_p > 4:
     print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
