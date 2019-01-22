@@ -30,7 +30,7 @@ surf = ax.plot_surface(xdata, ydata, zdata,linewidth=0)
 #keep Aspect ratio
 
 ax.auto_scale_xyz([-40, 40], [-135, 135], [0, 11])
-ax.pbaspect = [0.6, 2.0, 1.0]
+ax.pbaspect = [0.6, 2.0, 0.8]
 
 
 #Axis Definition
@@ -40,8 +40,8 @@ ax.set_zlabel("P, power dens. [W/mm^2]")
 
 
 # Set viewpoint.
-#ax.azim = 160
-#ax.elev = 30
+ax.azim = -75
+ax.elev = 15
 
 
 #ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='Greens')
