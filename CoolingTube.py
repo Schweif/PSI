@@ -47,8 +47,8 @@ r_bend = 0.005                      #m bending radius of bends inside the coolin
 bend_angle = 180                    #° bending angle of bends inside the cooling channel
 
 #choose which parameter should be calculated (set to False if it should be calculated)
-delta_T = False                     # K difference between inlet and outlet temperature, set to False to calculate delta T
-v_flow_l_n = 6                      #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
+delta_T = 45                     # K difference between inlet and outlet temperature, set to False to calculate delta T
+v_flow_l_n = False                      #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
 model= 'Wagner'                     #Select a calculation model. Available models are:
 #'Wagner'         = DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
 #'Gnielinski'     = Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
