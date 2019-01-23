@@ -19,14 +19,14 @@ import math
 #CONFIGURATION SECTION
 
 #Boundary conditions, set according to machine
-P0= 4000                            #J/s = W heating power
+P0= 3900                            #J/s = W heating power
 T_i = 25                            #°C water inlet temperature
 
 #Constants Water
-roh_water = 997.05                  #kg/m**3 density at 25 °C
-Cp_water = 4179.0                   #J/(kg*K) thermal capacity
-lambda_water = 0.598                #W/(m*K) thermal conductivity
-nue_water = 890.45e-6               #kg/(m*s) dynamic viscosity at 25 °C
+roh_water = 1000                    #kg/m**3 density at 25 °C
+Cp_water = 4180                     #J/(kg*K) thermal capacity
+lambda_water = 0.6                  #W/(m*K) thermal conductivity
+nue_water = 890.e-6                 #kg/(m*s) dynamic viscosity at 25 °C
 
 #Constants Solid
 lambda_solid = 390                  #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
@@ -34,17 +34,17 @@ epsylon_solid = 0.6                 #w/o unit, emission number e.g. Cu polished 
 
 #Setup of the cooled device
 thickness = 0.007                   #m thickness of the material between fluid and power in
-width = 4*0.00235                   #m irradiation width on which the power is applied
-length = 4*0.02901                  #m irradiation length on which the power is applied
+width = 0.08#4*0.00235              #m irradiation width on which the power is applied
+length = 0.212#4*0.02901            #m irradiation length on which the power is applied
 
 #Setup of the cooling channel
 d= 0.003                            #m diameter of water tube
-l= 2*0.22                           #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
-n= 6                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
-k_tube = 1e-6                       #m surface roughness of the cooling tube
-n_bends = 2                         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
-r_bend = 0.005                         #m bending radius of bends inside the cooling channel
-bend_angle = 90                      #° bending angle of bends inside the cooling channel
+l= 12*0.22                          #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
+n= 1                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
+k_tube = 5e-6                       #m surface roughness of the cooling tube
+n_bends = 12                        # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
+r_bend = 0.005                      #m bending radius of bends inside the cooling channel
+bend_angle = 180                    #° bending angle of bends inside the cooling channel
 
 #choose which parameter should be calculated (set to False if it should be calculated)
 delta_T = False                     # K difference between inlet and outlet temperature, set to False to calculate delta T

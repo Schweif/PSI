@@ -1,3 +1,5 @@
+
+
 #imports for 3D Ploting of collected data
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
@@ -13,9 +15,9 @@ from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
 
 
-DataRaw =  '/home/just/Documents/powerdensity.dat'
+DataRaw =  '/home/just/Documents/msShutterNew.dat'
 import numpy as np #did not work on first imort doing it twice instead
-da= np.genfromtxt(DataRaw,skip_header=2, usecols=(0, 1, 2))
+da= np.genfromtxt(DataRaw,skip_header=0, usecols=(0, 1, 2))
 
 xdata= da[:,0]
 ydata= da[:,1]
