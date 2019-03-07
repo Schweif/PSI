@@ -19,36 +19,40 @@ import math
 #CONFIGURATION SECTION
 
 #Boundary conditions, set according to machine
-P0= 4000                            #J/s = W heating power
+P0= 3900                            #J/s = W heating power
 T_i = 25                            #°C water inlet temperature
 
 #Constants Water
-roh_water = 997.05                  #kg/m**3 density at 25 °C
-Cp_water = 4179.0                   #J/(kg*K) thermal capacity
-lambda_water = 0.598                #W/(m*K) thermal conductivity
-nue_water = 890.45e-6               #kg/(m*s) dynamic viscosity at 25 °C
+roh_water = 1000 #997.05                  #kg/m**3 density at 25 °C
+Cp_water = 4180 #4179.0                   #J/(kg*K) thermal capacity
+lambda_water = 0.6#0.598                #W/(m*K) thermal conductivity
+nue_water = 890e-6 #890.45e-6               #kg/(m*s) dynamic viscosity at 25 °C
 
 #Constants Solid
 lambda_solid = 390                  #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
 epsylon_solid = 0.6                 #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
 
 #Setup of the cooled device
-thickness = 0.007                   #m thickness of the material between fluid and power in
-width = 4*0.00235                   #m irradiation width on which the power is applied
-length = 4*0.02901                  #m irradiation length on which the power is applied
+thickness = 0.011                   #m maximum thickness of the material between fluid and power in
+width = 0.080 #4*0.00235                   #m irradiation width on which the power is applied
+length = 0.212 #4*0.02901                  #m irradiation length on which the power is applied
 
 #Setup of the cooling channel
 d= 0.003                            #m diameter of water tube
 l= 2*0.22                           #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
 n= 6                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
-k_tube = 1e-6                       #m surface roughness of the cooling tube
-n_bends = 2                         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
-r_bend = 0.005                         #m bending radius of bends inside the cooling channel
-bend_angle = 90                      #° bending angle of bends inside the cooling channel
+
+k_tube = 5e-6                       #m surface roughness of the cooling tube
+n_bends = 6                         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
+r_bend = 0.018                      #m bending radius of bends inside the cooling channel
+bend_angle = 180                    #° bending angle of bends inside the cooling channel
+counterflow= False                  #boolean, specifiy if the cooling tubes run in counteflow mode or not; If in counterflow the average temperture will be used to qualify solid temperatures, default False
+counterflow_factor= 0.5             # 0..1, a factor defining the fraction betwwen the efficinecy of the counterflow. if set to 1 the water inlet temperature wil be choosen as reference temperature for the maximum solit temperature calculations if set to 0 the maximum water temperature is used (i.e. with out counterflow). Default is 0.5
+
 
 #choose which parameter should be calculated (set to False if it should be calculated)
 delta_T = False                     # K difference between inlet and outlet temperature, set to False to calculate delta T
-v_flow_l_n = 6                      #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
+v_flow_l_n = 6.0                    #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
 model= 'Wagner'                     #Select a calculation model. Available models are:
 #'Wagner'         = DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
 #'Gnielinski'     = Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
@@ -222,23 +226,36 @@ alpha= Nu*lambda_water/d                                                        
 T_chan_av = P/(d*math.pi*l*alpha) +T_av                                         #°C average wall temperature on the surface of the fluid channel
 T_chan_max = P/(d*math.pi*l*alpha) +T_o                                         #°C maximum wall temperature on the surface of the fluid channel
 T_chan_in = P/(d*math.pi*l*alpha) +T_i                                          #°C minimum wall temperature on the surface of the fluid channel
+T_chan_counter = T_chan_in+(T_chan_max-T_chan_in)*counterflow_factor            #°C weigthed wall temperature on the surface of the fluid channel under counterflow condition
 delta_p = calc_pressure_loss(Re,d,l,omega,roh_water,k_tube,n_bends,r_bend,bend_angle)/100000/n                   #bar, pressure loss in tube in bar for all parallel tubes
-T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_max)
+if counterflow==False:
+    T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_max)
+else:
+    T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_counter) 
 P_rad = calc_thermal_radiation(area*7,T_outherWall_max+273.15,epsylon_solid)    #factor area*7 accounts for cubic volume from area plus some estimated factor
 
 #generate output
 print "The heat transfer coefficient Alpha is:  " +str(round(alpha,1))+" W/(m**2*K)"
-print "The average channel wall temperature is  " +str(round(T_chan_av,1)) +" °C"
-if T_chan_max < 100:
-    print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'green')
-else:
-    print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
 print "The inlet channel wall temperature is    " +str(round(T_chan_in,1)) +" °C"
-print "The pressure loss in the tube is         " +str(round(delta_p,1)) +" bar"
+if counterflow==False:
+    print "The average channel wall temperature is  " +str(round(T_chan_av,1)) +" °C"
+    if T_chan_max < 100:
+        print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'green')
+    else:
+        print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
+
+else:
+    if T_chan_max < 100:
+        print colored("The max. channel wall temperature is     " +str(round(T_chan_counter,1)) +" °C",'green')
+    else:
+        print colored("The max. channel wall temperature is     " +str(round(T_chan_counter,1)) +" °C",'red')
+print "The max. outside wall temperature is     " +str(round(T_outherWall_max,1)) +" °C"
+
+print "The pressure loss in the tube is         " +str(round(delta_p,2)) +" bar"
 if delta_p > 4:
     print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
-print "The max. outside wall temperature is     " +str(round(T_outherWall_max,1)) +" °C"
+
 print "The power loss due to radiation is       " +str(round(P_rad,1)) +" W"
-print "The values for delta_t and for the volume flow with accounting for the radiation are: "
+print "The values for delta_t and for the volume flow with accounting for thermal radiation are: "
 calc_deltaT_from_volumeFlow(P-P_rad,Cp_water,roh_water,v_flow)
 calc_water_flow_from_deltaT(P-P_rad,Cp_water,roh_water,delta_T)

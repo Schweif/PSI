@@ -13,17 +13,21 @@ from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
 
 
-DataRaw =  '/home/just/Documents/powerdensity.dat'
+DataRaw =  '/home/just/Documents/PSI/FluxSLS1at17.05m5005eV.dat'
 import numpy as np #did not work on first imort doing it twice instead
-da= np.genfromtxt(DataRaw,skip_header=2, usecols=(0, 1, 2))
+da= np.genfromtxt(DataRaw,skip_header=10, usecols=(0, 1, 2))
 
 xdata= da[:,0]
 ydata= da[:,1]
 zdata= da[:,2]
 
+
 ax = plt.axes(projection='3d')
 ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='Greens')
 plt.show()
+
+
+
 
 '''
 # Plot the surface.
@@ -109,8 +113,8 @@ def FitAndPlot2DGauss(axis):
     plt.title(axis+' Axis')
     plt.xlabel('length (mm)')
     plt.ylabel('PowerDens (W/mm**2)')
-    plt.text(0,1, "mean = " +str(mean) +"\nsigma = " +str(sigma), fontsize=12)
-    plt.show()
+    plt.text(1,0,"sigma = " +str(round(sigma,3)) +" mm", fontsize=12, horizontalalignment='left', verticalalignment='bottom')
+    plt.show()    
 
     
 FitAndPlot2DGauss('x')
@@ -119,7 +123,7 @@ FitAndPlot2DGauss('y')
 
 
 
-
+'''
 
 plt.plot(x0ydata,x0zdata,'b+:',label='data')
 plt.plot(x0ydata,Gauss(x0ydata,*popt),'ro:',label='fit')
@@ -128,7 +132,7 @@ plt.title('X=0, Gaussfit')
 plt.xlabel('Y in mm')
 plt.ylabel('Flux Desity')
 plt.show()
-
+'''
 '''
 check:https://stackoverflow.com/questions/19206332/gaussian-fit-for-python
 import numpy as np
@@ -153,3 +157,4 @@ ax = plt.axes(projection='3d')
 da= np.genfromtxt(DataRaw,skip_header=10, usecols=(0, 1, 2))
 da[:,0].min()
 ######################'''
+
