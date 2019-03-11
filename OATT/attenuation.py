@@ -8,7 +8,7 @@ from os.path import isfile, join
 import matplotlib.pyplot as plt
 from itertools import combinations
 
-pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/'
+pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/CandSiOnly/selection18'
 
 
 # append the rawData from all Foils
@@ -81,7 +81,7 @@ while i + 1 <= noOfFoils + noCombinations:
     i = i + 1
 
 plt.semilogy(10)
-plt.ylim((10e-5, 1))  # set the ylim to bottom, top
+plt.ylim((10e-6, 1))  # set the ylim to bottom, top
 plt.xlim((250, 2000))  # set the xlim to left, right
 plt.xlabel('Photon Energy [eV]')
 plt.ylabel('Transmission')
