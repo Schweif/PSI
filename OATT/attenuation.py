@@ -8,7 +8,7 @@ from os.path import isfile, join
 import matplotlib.pyplot as plt
 from itertools import combinations
 
-pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/CandSiOnly/selection20'
+pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten/'
 
 
 # append the rawData from all Foils
