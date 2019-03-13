@@ -1,6 +1,16 @@
 #!/usr/bin/python2.7
 # -*- coding: utf-8 -*-
 
+#March 2019
+#Paul Scherrer Institut, PSI
+#David Marco Just
+#david.just@psi.ch
+
+
+#calculates and displays all posible attenuations of a set of different filter foils to be used in the solid state attenuator at the ATHOS beam line at SwissFEL
+#Maximum size of 24 foils can be corectly calculated
+
+
 
 import numpy as np
 from os import listdir, chdir
@@ -8,19 +18,31 @@ from os.path import isfile, join
 import matplotlib.pyplot as plt
 from itertools import combinations
 
-pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten/'
 
+pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten/'
+duplicateFoils = True  # specify if the foils will be duplicated for redundancy and for more possible combinations
 
 # append the rawData from all Foils
 i = 0
 da = []
 for f in listdir(pathToAttenuatorFoils):
+    print f
     chdir(pathToAttenuatorFoils)
     if isfile(join(pathToAttenuatorFoils, f)) and f.endswith('.dat'):
         da.append(f[:-4])
         da.append(np.genfromtxt(f, skip_header=2, usecols=(0, 1)))
         i = i + 1
 noOfFoils = i
+
+if duplicateFoils == True:
+    for f in listdir(pathToAttenuatorFoils):
+        print f
+        chdir(pathToAttenuatorFoils)
+        if isfile(join(pathToAttenuatorFoils, f)) and f.endswith('.dat'):
+            da.append(f[:-4])
+            da.append(np.genfromtxt(f, skip_header=2, usecols=(0, 1)))
+            i = i + 1
+    noOfFoils = noOfFoils * 2
 
 # count from 0 to nOfFoils
 foils = []
@@ -32,10 +54,48 @@ while i < noOfFoils:
 # get all possible combinations
 noOfFoilsToCombine = 2
 possibleCombinations = []
-while noOfFoilsToCombine <= noOfFoils:
+while noOfFoilsToCombine <= noOfFoils or noOfFoilsToCombine <= 12:
     comb = combinations(foils, noOfFoilsToCombine)
     possibleCombinations.extend(list(comb))
     noOfFoilsToCombine = noOfFoilsToCombine + 1
+
+# exclude invalid combinations:
+newComb = []
+for i in possibleCombinations:
+    # exclude combinations on the same arm
+    if set([0, 12]).issubset(i):
+        continue
+    elif set([1, 13]).issubset(i):
+        continue
+    elif set([2, 14]).issubset(i):
+        continue
+    elif set([3, 15]).issubset(i):
+        continue
+    elif set([4, 16]).issubset(i):
+        continue
+    elif set([5, 17]).issubset(i):
+        continue
+    elif set([6, 18]).issubset(i):
+        continue
+    elif set([7, 19]).issubset(i):
+        continue
+    elif set([8, 20]).issubset(i):
+        continue
+    elif set([9, 21]).issubset(i):
+        continue
+    elif set([10, 22]).issubset(i):
+        continue
+    elif set([11, 23]).issubset(i):
+        continue
+    else:
+        newComb.append(i)
+
+# display difference before and after excluding some combinations; debug only
+noCombinations = len(possibleCombinations)
+newNoCombinations = len(newComb)
+
+# Update list of combinations after deleting foribiden combinations
+possibleCombinations= newComb
 noCombinations = len(possibleCombinations)
 
 for combination in possibleCombinations:
