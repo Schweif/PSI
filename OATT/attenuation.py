@@ -17,7 +17,7 @@ from os import listdir, chdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 from itertools import combinations
-
+import sys
 
 pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten/'
 duplicateFoils = True  # specify if the foils will be duplicated for redundancy and for more possible combinations
@@ -43,6 +43,9 @@ if duplicateFoils == True:
             da.append(np.genfromtxt(f, skip_header=2, usecols=(0, 1)))
             i = i + 1
     noOfFoils = noOfFoils * 2
+
+if noOfFoils > 23:
+	sys.exit("Error the list of foils is larger than 24. The resulting combinations will be to many. Please lower the ammount of foils or addapt this script")	
 
 # count from 0 to nOfFoils
 foils = []
