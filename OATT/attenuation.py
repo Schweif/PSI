@@ -36,7 +36,7 @@ noOfFoils = i
 
 if duplicateFoils == True:
     for f in listdir(pathToAttenuatorFoils):
-        print f
+        print f[:-4]
         chdir(pathToAttenuatorFoils)
         if isfile(join(pathToAttenuatorFoils, f)) and f.endswith('.dat'):
             da.append(f[:-4])
@@ -100,6 +100,7 @@ newNoCombinations = len(newComb)
 # Update list of combinations after deleting foribiden combinations
 possibleCombinations= newComb
 noCombinations = len(possibleCombinations)
+print 'Possible combinations using this set of foils: ' +str(noCombinations)
 
 for combination in possibleCombinations:
     nFoils = len(combination)
