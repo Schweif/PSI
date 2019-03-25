@@ -9,16 +9,19 @@
 import numpy as np
 from os import listdir, chdir
 from os.path import isfile, join
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import matplotlib.pyplot as plt
+
+
+
 
 pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
 pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/X04S_flux/'
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 100.0  # eV given by yield table
-
+distanceFromSource = 10  # m distance from source at which the flux was calculated
+bucketSize = 40 #  eV
 
 def prepare_yield_data(pathToYield):
     yieldPerEnergy = []
@@ -27,7 +30,7 @@ def prepare_yield_data(pathToYield):
     #  set energy to eV
     yieldPerEnergy[:, 0] = yieldPerEnergy[:, 0] * 1000000.0
     #  set yield to mm²
-    yieldPerEnergy[:, 1] = yieldPerEnergy[:, 1] * 100
+    yieldPerEnergy[:, 1] = yieldPerEnergy[:, 1] / 100
     # remove energies lower than min and higher tha max
     i=0
     for E in yieldPerEnergy[:,0]:
@@ -60,6 +63,15 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
+def photons_per_energy_bucket(fluxData,bucketSize):
+    for data in fluxData:
+        if type(data)== str:
+            Energy = float(data)
+            BW = Energy * 0.001
+        else:
+            data[:,2] =data[:,2] * BW / bucketSize
+    return fluxData
+
 def multiply_flux_with_yield(fluxData, yieldPerEnergyData):
     yieldValue = 0
     for data in fluxData:
@@ -70,10 +82,10 @@ def multiply_flux_with_yield(fluxData, yieldPerEnergyData):
                 if yieldPerEnergy[0]== nearestEnergy:
                     yieldValue= yieldPerEnergy[1]
         else:
-            data[:,1]= data[:,1]*yieldValue
+            data[:,2]= data[:,2]*yieldValue
     return fluxData
 
-def summ_all_weightetd_fluxes(weightedFluxes):
+def summ_all_weighted_fluxes(weightedFluxes):
     i=0
     summedFluxes= weightedFluxes[1]
     for fluxPerEnergy in weightedFluxes:
@@ -82,22 +94,57 @@ def summ_all_weightetd_fluxes(weightedFluxes):
         i=i+1
     return summedFluxes
 
-def plot3D(xdata, ydata, zdata):
+def flux_per_mm_sqr(weightedFluxes, distanceFromSource):
+    weightedFluxes[:,2]=weightedFluxes[:,2]/ distanceFromSource**2
+    return weightedFluxes
+
+
+def plot3D(x, y, z):
     fig = plt.figure()
-    ax = plt.axes(projection='3d')
-    surf = ax.plot_surface(xdata, ydata, zdata, linewidth=0)
+    ax = fig.gca(projection='3d')
+    ax.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.2)
     ax.set_xlabel('x, position hor. [mm]')
     ax.set_ylabel('y, position ver. [mm]')
     ax.set_zlabel("Flux, (arbitary)")
+    plt.xlim(-5,5)
+    plt.ylim(-5,5)
+    plt.show()
 
+def plot_top_view(x,y,z):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.2)
+    ax.set_xlabel('x, position hor. [mm]')
+    ax.set_ylabel('y, position ver. [mm]')
+    ax.set_zlabel("Flux, (arbitary)")
+    plt.xlim(-5,5)
+    plt.ylim(-5,5)
+    ax.azim = -90
+    ax.elev = 90
+    plt.show()
 
-
+def plot2D(x, y, z): 
+    x= np.arange(len(x))
+    y= np.arange(len(y))
+    z= np.arange(len(y)*len(x)).reshape(len(x),len(y))
+    x1, y1 = np.meshgrid(x, y)
+    plt.contourf(x1, y1, z,100)   
+    plt.colorbar()
+    plt.show()
 
 
 if __name__ == '__main__':
     yieldPerEnergy = prepare_yield_data(pathToYield)
     fluxData, noEnegries = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
+    fluxData = photons_per_energy_bucket(fluxData, bucketSize)
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
-    allFluxes= summ_all_weightetd_fluxes(fluxDataYielded)
+    allFluxes= summ_all_weighted_fluxes(fluxDataYielded)
+    allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
-    plt.show()
+    plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
+
+'''
+x = allFluxes[:,0]
+y = allFluxes[:,1]
+z = allFluxes[:,2]
+'''
