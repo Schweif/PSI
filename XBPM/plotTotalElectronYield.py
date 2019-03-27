@@ -108,6 +108,7 @@ def plot3D(x, y, z):
     ax.set_zlabel("Flux, (arbitary)")
     plt.xlim(-5,5)
     plt.ylim(-5,5)
+    plt.axis('scaled')
     plt.show()
 
 def plot_top_view(x,y,z):
@@ -121,6 +122,7 @@ def plot_top_view(x,y,z):
     plt.ylim(-5,5)
     ax.azim = -90
     ax.elev = 90
+    plt.axis('scaled')
     plt.show()
 
 def plot2D(x, y, z): 
