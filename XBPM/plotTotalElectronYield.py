@@ -12,7 +12,7 @@ from os.path import isfile, join
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 import matplotlib.pyplot as plt
-
+import matplotlib.mlab as ml
 
 
 
@@ -126,13 +126,27 @@ def plot_top_view(x,y,z):
     plt.show()
 
 def plot2D(x, y, z): 
-    x= np.arange(len(x))
-    y= np.arange(len(y))
-    z= np.arange(len(y)*len(x)).reshape(len(x),len(y))
-    x1, y1 = np.meshgrid(x, y)
-    plt.contourf(x1, y1, z,100)   
-    plt.colorbar()
+    xmax= np.max(x)
+    ymax= np.max(y)
+    xmin= np.min(x)
+    ymin= np.min(y)
+    nx = len(x)
+    ny= len(y)
+    
+    xi = np.linspace(xmin, xmax, nx)
+    yi = np.linspace(ymin, ymax, ny)
+    zi = ml.griddata(x, y, z, xi, yi)
+
+    plt.contourf(xi, yi, zi, 15, linewidths = 0.5, colors = 'k')
+    plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
+
+    plt.colorbar() 
+    #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
+    plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
+    plt.xlim(xmin, xmax)
+    plt.ylim(ymin, ymax)
     plt.show()
+    #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
 
 
 if __name__ == '__main__':
