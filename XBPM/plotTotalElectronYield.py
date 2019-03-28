@@ -158,6 +158,7 @@ if __name__ == '__main__':
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
+    plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
 
 '''
 x = allFluxes[:,0]
