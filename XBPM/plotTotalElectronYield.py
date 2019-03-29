@@ -10,7 +10,7 @@ import numpy as np
 from os import listdir, chdir
 from os.path import isfile, join
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
+from matplotlib import cm, ticker
 import matplotlib.pyplot as plt
 import matplotlib.mlab as ml
 
@@ -21,7 +21,7 @@ pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/X04S_flux/coldIDsettings/'
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 100.0  # eV given by yield table
 distanceFromSource = 10  # m distance from source at which the flux was calculated
-bucketSize = 1 #  eV
+bucketSize = 40 #  eV
 
 def prepare_yield_data(pathToYield):
     yieldPerEnergy = []
@@ -31,7 +31,7 @@ def prepare_yield_data(pathToYield):
     yieldPerEnergy[:, 0] = yieldPerEnergy[:, 0] * 1000000.0
     #  set yield to mm²
     yieldPerEnergy[:, 1] = yieldPerEnergy[:, 1] / 100
-    # remove energies lower than min and higher tha max
+    # remove energies lower than min and higher than max
     i=0
     for E in yieldPerEnergy[:,0]:
         if E < minEnergy or E > maxEnergy:
@@ -136,7 +136,6 @@ def plot2D(x, y, z):
     xi = np.linspace(xmin, xmax, nx)
     yi = np.linspace(ymin, ymax, ny)
     zi = ml.griddata(x, y, z, xi, yi)
-
     plt.contourf(xi, yi, zi, 15, linewidths = 0.5, colors = 'k')
     plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
 
