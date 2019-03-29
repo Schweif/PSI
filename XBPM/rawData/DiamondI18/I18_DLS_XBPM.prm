@@ -1,0 +1,337 @@
+[SavedIndices]
+0 0 0
+
+[SavedIndex]
+0
+
+[BLDATA]
+Name	Untitled
+EBname	Untitled
+SRCname	Untitled
+OUTname	Untitled
+
+[ACCELERATOR]
+Name	Untitled
+eGeV	3
+imA	300
+cirm	561.571
+bunches	936
+pulsepps	60
+btps	
+bunchlength	4
+bunchcharge	0.600384
+peakc	17.9515
+emitt	3200e-12
+coupl	0.002524
+emittx	3.192e-09
+emitty	8.056e-12
+espread	0.00086
+betax	4.957
+alphax	0.229
+betay	1.876
+alphay	0.305
+eta	0
+deta	0
+etay	0
+detay	0
+qscanpos	5
+qscanfinv	0.05
+eGeV_prof	2.411
+imA_prof	400
+cirm_prof	288
+bunches_prof	480
+pulsepps_prof	60
+btps_prof	
+bunchlength_prof	15
+bunchcharge_prof	0.800554
+peakc_prof	6.38308
+emitt_prof	5500e-12
+coupl_prof	0.08
+emittx_prof	5.093e-09
+emitty_prof	4.074e-10
+espread_prof	0.00107
+betax_prof	1.38
+alphax_prof	0
+betay_prof	1
+alphay_prof	0
+eta_prof	0
+deta_prof	0
+etay_prof	0
+detay_prof	0
+qscanpos_prof	5
+qscanfinv_prof	0.05
+eGeV_mpar	2.411
+imA_mpar	400
+cirm_mpar	288
+bunches_mpar	480
+pulsepps_mpar	60
+btps_mpar	
+bunchlength_mpar	15
+bunchcharge_mpar	0.800554
+peakc_mpar	6.38308
+emitt_mpar	5500e-12
+coupl_mpar	0.08
+emittx_mpar	5.093e-09
+emitty_mpar	4.074e-10
+espread_mpar	0.00107
+betax_mpar	1.38
+alphax_mpar	0
+betay_mpar	1
+alphay_mpar	0
+eta_mpar	0
+deta_mpar	0
+etay_mpar	0
+detay_mpar	0
+qscanpos_mpar	5
+qscanfinv_mpar	0.05
+charge	3.15e-15
+pdatadivide	4
+pdatasmooth	1
+pdatadivide2d	4
+pdatasmooth2d	1
+colindex	1,2,3,4,5,6
+unitindex	0,0,0,0,0,0
+xinj	0
+yinj	0
+xdinj	0
+ydinj	0
+accelerator	0
+injectionebm	0
+bunchtype	0
+bunchunit	0
+transunit	0
+angleunit	0
+chargeunit	0
+isdistenergy	0
+isdisttemp	0
+isdistxxd	0
+isdistyyd	0
+isdistxy	0
+isqscan	0
+currcoefunit	1.0
+DistributionFile	
+BunchProfileName	
+EnergyProfileName	
+XProfileName	
+YProfileName	
+XYProfileName	
+
+[SOURCE]
+Name	Untitled
+gap	7
+bx	0
+by	0.980001
+lu	2.7
+length	1.99
+periods	10
+kperp	-1
+kr	0
+kx	0
+ky	2.47065
+ky2	0
+radius	34.2
+bendlength	2.8
+fringelen	0.05
+csrorg	0
+sidepolel	0.05
+sidepoleb	1
+segments	4
+Lint	0.2
+phi1	2
+phi2	0
+Dphi	1.333333
+Lmatch	0.5
+segerrseed	1
+kerr	1.0e-3
+phierr	0.1
+kickerrx	0.0
+kickerry	0.0
+taperfx	0
+taperfy	0
+taperqx	0
+taperqy	0
+bxoffset	0
+byoffset	0
+mltZ	0
+mltL	0.01
+mltG	1
+magerrseed	1
+fielderr	0.3
+phaseerr	5
+errtrax	1
+errtray	1
+type	LIN_UND
+vertical	0
+segment_type	0
+segment_scheme	0
+segmented_error	0
+gaplink	1
+special_magnets	0
+natfocusx	0
+natfocusy	0
+mltType	0
+mltOrder	1
+mltpole	0
+funitgap	0
+funit	0
+dunit	0
+inip	0
+iniv	0
+isperlattice	0
+skipperiod	
+magerron	0
+endpoles	2
+avgphaseint	10
+FieldMappingDataFile	
+FieldDataName	
+GapDataName	
+MultipoleData	
+SegmentErrorData	
+CustomSegmentData	
+CustomBxyData	
+
+[CALCULATION]
+Name	Untitled
+slit_dist	10
+epmin	2000
+epmax	20000
+de	5
+normalfixep	1.0
+fixep	5000
+phs_Dx	0.1
+minthetax	-1
+maxthetax	1
+min_x	-10
+max_x	10
+mesh_phs_x	51
+meshx	51
+phs_Dy	0.1
+minthetay	-1
+maxthetay	1
+min_y	-10
+max_y	10
+mesh_phs_y	51
+meshy	51
+mintheta	0
+maxtheta	0.15
+min_r	0
+max_r	1.5
+meshr	50
+minphi	0
+maxphi	90
+meshphi	50
+harmmin	1
+harmmax	19
+tgtharm	1
+detune	0.0
+srcopte	781.195
+kymin	0.5
+kymax	1.69
+meshep	100
+thetax	0
+thetay	0
+posx	0
+posy	0
+slit_thetax	0
+slit_thetay	0
+slit_x	0
+slit_y	0
+slitvarx	12.7092
+slitvary	23.9554
+Dthetax	0.8
+Dthetay	0.4
+Dx	8
+Dy	4
+slit_theta1	0.15
+slit_theta2	0.21
+slit_r1	1.5
+slit_r2	2.1
+timerange	1
+meshtime	10000
+gthetax	1.0
+gthetay	1.0
+hacceptance	0.1
+srcpeini	13000
+srcpefin	15000
+srcpemesh	201
+srcxfix	0.0
+srcyfix	0.0
+srcqxfix	0.0
+srcqyfix	0.0
+wiggleramp	0.0018084
+srcxini	-1
+srcxfin	1
+srcxmesh	51
+srcyini	-0.03
+srcyfin	0.03
+srcymesh	51
+srcqxini	-0.05
+srcqxfin	0.05
+srcqxmesh	51
+srcqyini	-0.01
+srcqyfin	0.01
+srcqymesh	51
+spdzini	5.0
+spdzfin	15.0
+spdzmesh	11
+spdypos	3.0
+spdxpos	10.0
+spdrpos	2.0
+spdnradial	90.0
+spdnazimuth	90.0
+espos	0
+bpfcenter	12000
+bpfwidth	100
+bpfmaxeff	1
+transplotEmin	1000
+transplotEmax	1.0e+5
+transplotMesh	1000
+resolutionE1	2900
+resolutionDE1	190
+resolutionE2	5900
+resolutionDE2	220
+suffix_spectrum	dc0
+suffix_spectrum_res	drs
+suffix_spectrum_flt	dft
+suffix_sd_axisx	dtx
+suffix_sd_axisy	dty
+suffix_sd_mesh	dta
+suffix_efield	dta
+suffix_kd	dta
+suffix_brillc	dbr
+suffix_4dsrc	dsc
+suffix_spd	dta
+fin_dist	0
+coherentsp	0
+auto	1
+autoratio	0.5
+easy	0
+epdiv	-1
+accuracy	1
+efieldtype	0
+withpd	1
+energy_conv	0
+filter	0
+filtertype	0
+bpftype	0
+outofslit	0
+zeroemitt	0
+zeroespread	0
+header	1
+unitlabel	1
+elogscale	0
+autoseed	0
+seednumber	1
+swapsize	1
+applfalloc	0
+applpdmem	0
+fixpointitem	0
+wig4dbin	0
+wig2dbin	
+slitnorm	0
+efixnorm	0
+skip4ditems	0
+xsmoothing	1
+FilterDataName	
+GenericFilterDataName	
+
