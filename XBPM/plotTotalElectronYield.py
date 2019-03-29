@@ -17,11 +17,11 @@ import matplotlib.mlab as ml
 
 
 pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
-pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/X04S_flux/'
+pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/X04S_flux/coldIDsettings/'
 maxEnergy = 30000.0  # eV given by flux calculations
-minEnergy = 10.0  # eV given by yield table
+minEnergy = 100.0  # eV given by yield table
 distanceFromSource = 10  # m distance from source at which the flux was calculated
-bucketSize = 40 #  eV
+bucketSize = 1 #  eV
 
 def prepare_yield_data(pathToYield):
     yieldPerEnergy = []
