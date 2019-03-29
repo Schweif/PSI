@@ -13,11 +13,13 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm, ticker
 import matplotlib.pyplot as plt
 import matplotlib.mlab as ml
+import scipy
+from scipy import integrate
 
 
 
 pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
-pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/X04S_flux/coldIDsettings/'
+pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/DiamondI18/'
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 100.0  # eV given by yield table
 distanceFromSource = 10  # m distance from source at which the flux was calculated
@@ -94,6 +96,41 @@ def summ_all_weighted_fluxes(weightedFluxes):
         i=i+1
     return summedFluxes
 
+def integrate_all_weigthed_fluxes(weightedFluxes):
+    i=0
+    energies = []
+    demo = weightedFluxes[1]
+    #get x-axis:
+    for value in weightedFluxes:
+        if i % 2 == 0: #only the energy vallues (evens)
+            energies.append(float(value))
+        i=i+1
+    energies = np.asarray(energies)
+    j=0 # itteration per coordinate
+    len_j =len(demo)
+    len_ii= len(energies)
+    len_i = len(weightedFluxes)
+    yarray = np.zeros((len(demo),len(energies)))
+    while j < len(demo): #gehe durch alle coordinaten
+        i=0 # itteration per energyVallue and arrays        
+        ii=0 # itteration per energyVallue and arrays
+        for value in weightedFluxes: #gehe durch alle energien
+            if i & 1: #only the arrays (odds)
+                yarray[j,ii] = value[j][2]
+                ii=ii+1
+            i=i+1
+        j=j+1
+    i=0
+    for coordinate in yarray:
+        demo[i][2]=scipy.integrate.trapz(coordinate,x=energies)
+        i=i+1
+    return demo
+    
+            
+            
+    
+
+
 def flux_per_mm_sqr(weightedFluxes, distanceFromSource):
     weightedFluxes[:,2]=weightedFluxes[:,2]/ distanceFromSource**2
     return weightedFluxes
@@ -153,11 +190,12 @@ if __name__ == '__main__':
     fluxData, noEnegries = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
     fluxData = photons_per_energy_bucket(fluxData, bucketSize)
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
-    allFluxes= summ_all_weighted_fluxes(fluxDataYielded)
+    #allFluxes= summ_all_weighted_fluxes(fluxDataYielded)
+    allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
-    plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
+    #plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
 
 '''
 x = allFluxes[:,0]
