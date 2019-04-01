@@ -5,6 +5,7 @@
 # Paul Scherrer Institut, PSI
 # David Marco Just
 # david.just@psi.ch
+#TODO: Import of FLux Tables schould be in numerical order in order to have the integration working
 
 import numpy as np
 from os import listdir, chdir
@@ -15,6 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as ml
 import scipy
 from scipy import integrate
+
 
 
 
@@ -122,7 +124,8 @@ def integrate_all_weigthed_fluxes(weightedFluxes):
         j=j+1
     i=0
     for coordinate in yarray:
-        demo[i][2]=scipy.integrate.trapz(coordinate,x=energies)
+        #demo[i][2]= coordinate.sum()
+        demo[i][2]=scipy.integrate.trapz(coordinate, energies)
         i=i+1
     return demo
     
@@ -195,7 +198,7 @@ if __name__ == '__main__':
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
-    #plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
+    plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
 
 '''
 x = allFluxes[:,0]
