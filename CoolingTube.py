@@ -19,8 +19,8 @@ import math
 #CONFIGURATION SECTION
 
 #Boundary conditions, set according to machine
-P0= 3900                            #J/s = W heating power
-T_i = 25                            #°C water inlet temperature
+P0= 800                           #J/s = W heating power
+T_i = 23                            #°C water inlet temperature
 
 #Constants Water
 roh_water = 1000 #997.05                  #kg/m**3 density at 25 °C
@@ -33,17 +33,17 @@ lambda_solid = 390                  #W/(m*K) thermal conductivity of the wall ma
 epsylon_solid = 0.6                 #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
 
 #Setup of the cooled device
-thickness = 0.011                   #m maximum thickness of the material between fluid and power in
-width = 0.080 #4*0.00235                   #m irradiation width on which the power is applied
-length = 0.212 #4*0.02901                  #m irradiation length on which the power is applied
+thickness = 0.006                  #m maximum thickness of the material between fluid and power in
+width = 0.0053#4*0.00235                   #m irradiation width on which the power is applied
+length = 0.0213 #4*0.02901                  #m irradiation length on which the power is applied
 
 #Setup of the cooling channel
-d= 0.003                            #m diameter of water tube
-l= 2*0.22                           #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
-n= 6                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
+d= 0.004                           #m diameter of water tube
+l= 0.076                          #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
+n= 2                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
 
 k_tube = 5e-6                       #m surface roughness of the cooling tube
-n_bends = 6                         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
+n_bends = 0                         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
 r_bend = 0.018                      #m bending radius of bends inside the cooling channel
 bend_angle = 180                    #° bending angle of bends inside the cooling channel
 counterflow= False                  #boolean, specifiy if the cooling tubes run in counteflow mode or not; If in counterflow the average temperture will be used to qualify solid temperatures, default False

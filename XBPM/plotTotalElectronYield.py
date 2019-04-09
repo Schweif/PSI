@@ -5,7 +5,7 @@
 # Paul Scherrer Institut, PSI
 # David Marco Just
 # david.just@psi.ch
-#TODO: Import of FLux Tables schould be in numerical order in order to have the integration working
+
 
 import numpy as np
 from os import listdir, chdir
@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as ml
 import scipy
 from scipy import integrate
+import re
 
 
 
@@ -44,11 +45,18 @@ def prepare_yield_data(pathToYield):
         i=i+1
     return(yieldPerEnergy)
 
+def sorted_aphanumeric(data):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+    return sorted(data, key=alphanum_key)
+
 def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     chdir(pathToFluxes)
     da = []
     i = 0
-    for f in listdir(pathToFluxes):
+    files = listdir(pathToFluxes)
+    files = sorted_aphanumeric(files)
+    for f in files:
         if isfile(join(pathToFluxes, f)) and f.endswith('.dta'):
             fo= open(f, "r")
             lines = list(fo)
@@ -127,11 +135,7 @@ def integrate_all_weigthed_fluxes(weightedFluxes):
         #demo[i][2]= coordinate.sum()
         demo[i][2]=scipy.integrate.trapz(coordinate, energies)
         i=i+1
-    return demo
-    
-            
-            
-    
+    return demo  
 
 
 def flux_per_mm_sqr(weightedFluxes, distanceFromSource):
