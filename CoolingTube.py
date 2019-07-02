@@ -19,45 +19,44 @@ import math
 #CONFIGURATION SECTION
 
 #Boundary conditions, set according to machine
-P0= 800                           #J/s = W heating power
-T_i = 23                            #°C water inlet temperature
+P0= 315                 #J/s = W heating power
+T_i = 20                #°C water inlet temperature
 
 #Constants Water
-roh_water = 1000 #997.05                  #kg/m**3 density at 25 °C
-Cp_water = 4180 #4179.0                   #J/(kg*K) thermal capacity
-lambda_water = 0.6#0.598                #W/(m*K) thermal conductivity
-nue_water = 890e-6 #890.45e-6               #kg/(m*s) dynamic viscosity at 25 °C
+roh_water = 1000        #kg/m**3 density at 25 °C
+Cp_water = 4180         #J/(kg*K) thermal capacity
+lambda_water = 0.6      #W/(m*K) thermal conductivity
+nue_water = 890e-6      #kg/(m*s) dynamic viscosity at 25 °C
 
 #Constants Solid
-lambda_solid = 390                  #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/8m*K)
-epsylon_solid = 0.6                 #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
+lambda_solid = 390      #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/m*K)
+epsylon_solid = 0.6     #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
 
 #Setup of the cooled device
-thickness = 0.006                  #m maximum thickness of the material between fluid and power in
-width = 0.0053#4*0.00235                   #m irradiation width on which the power is applied
-length = 0.0213 #4*0.02901                  #m irradiation length on which the power is applied
+thickness = 0.015       #m thickness of the material between fluid and power in
+width =  0.021          #m irradiation width on which the power is applied
+length = 0.007          #m irradiation length on which the power is applied
 
 #Setup of the cooling channel
-d= 0.004                           #m diameter of water tube
-l= 0.076                          #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
-n= 2                                # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
-
-k_tube = 5e-6                       #m surface roughness of the cooling tube
-n_bends = 0                         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
-r_bend = 0.018                      #m bending radius of bends inside the cooling channel
-bend_angle = 180                    #° bending angle of bends inside the cooling channel
-counterflow= False                  #boolean, specifiy if the cooling tubes run in counteflow mode or not; If in counterflow the average temperture will be used to qualify solid temperatures, default False
-counterflow_factor= 0.5             # 0..1, a factor defining the fraction betwwen the efficinecy of the counterflow. if set to 1 the water inlet temperature wil be choosen as reference temperature for the maximum solit temperature calculations if set to 0 the maximum water temperature is used (i.e. with out counterflow). Default is 0.5
-
+d= 0.004                #m diameter of water tube
+l= 252                  #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
+n= 1                    #number of tubes (with the same diameter) in parallel configuration flowing in the same direction
 
 #choose which parameter should be calculated (set to False if it should be calculated)
-delta_T = False                     # K difference between inlet and outlet temperature, set to False to calculate delta T
-v_flow_l_n = 6.0                    #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
-model= 'Wagner'                     #Select a calculation model. Available models are:
+delta_T = False         # K difference between inlet and outlet temperature, set to False to calculate delta T
+v_flow_l_n = 2          #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
+model= 'Wagner'         #Select a calculation model for the Nusselt Number. Available models are:
 #'Wagner'         = DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
 #'Gnielinski'     = Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
 #'Dittus_Boelter' = Dittus-Boelter equation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
 
+#Experimental configurations (Pressure differences and counterflow)
+k_tube = 5e-6           #m surface roughness of the cooling tube
+n_bends = 0             #number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
+r_bend = 0.018          #m bending radius of bends inside the cooling channel
+bend_angle = 180        #° bending angle of bends inside the cooling channel
+counterflow= False      #boolean, specifiy if the cooling tubes run in counteflow mode or not; If in counterflow the average temperture will be used to qualify solid temperatures, default False
+counterflow_factor= 0.5 #0..1, a factor defining the fraction between the efficinecy of the counterflow. if set to 1 the water inlet temperature wil be choosen as reference temperature for the maximum solid temperature calculations if set to 0 the maximum water temperature is used (i.e. without counterflow). Default is 0.5
 
 #CONFIGURATION ENDS HERE
 ############################################################################

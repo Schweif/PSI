@@ -13,7 +13,8 @@ from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
 
 
-DataRaw =  '/home/just/Documents/PSI/FluxSLS1at17.05m5005eV.dat'
+DataRaw =  '/home/just/Documents/PSI/Flux_5005_MS-SLS1.dat'
+dist_from_source = 10 #m
 import numpy as np #did not work on first imort doing it twice instead
 da= np.genfromtxt(DataRaw,skip_header=10, usecols=(0, 1, 2))
 
@@ -100,13 +101,19 @@ def FitAndPlot2DGauss(axis):
         n= len(y)
         mean = sum(x * y) / sum(y)
         sigma = np.sqrt(sum(y * (x - mean)**2) / sum(y))
+    print "***********************"
+    print "* Results for "+axis +" -axis *"
+    print "***********************"
     print "sigma = " +str(sigma) +" mm"
-    print "3 sigma = " +str(3*sigma/17.054) +" mrad"
+    print "sigma = " +str(sigma/dist_from_source) +" mrad"
+    print "3 sigma = " +str(3*sigma) +" mm"
+    print "3 sigma = " +str(3*sigma/dist_from_source) +" mrad"
     print "mean = " +str(mean)
+    print "************************************************"
  
     popt,pcov = curve_fit(Gauss, x, y, p0=[max(y), mean, sigma])
-    print "popt = " +str(popt)
-    print "pcov = " +str(pcov)
+    #print "popt = " +str(popt)
+    #print "pcov = " +str(pcov)
     plt.plot(x, y, 'b+:', label='data')
     plt.plot(x, Gauss(x, *popt), 'r-', label='fit')
     plt.legend()

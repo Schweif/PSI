@@ -135,8 +135,7 @@ def integrate_all_weigthed_fluxes(weightedFluxes):
         #demo[i][2]= coordinate.sum()
         demo[i][2]=scipy.integrate.trapz(coordinate, energies)
         i=i+1
-    return demo  
-
+    return demo
 
 def flux_per_mm_sqr(weightedFluxes, distanceFromSource):
     weightedFluxes[:,2]=weightedFluxes[:,2]/ distanceFromSource**2
