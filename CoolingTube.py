@@ -39,7 +39,7 @@ length = 0.007          #m irradiation length on which the power is applied
 
 #Setup of the cooling channel
 d= 0.004                #m diameter of water tube
-l= 252                  #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
+l= 0.252                #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
 n= 1                    #number of tubes (with the same diameter) in parallel configuration flowing in the same direction
 
 #choose which parameter should be calculated (set to False if it should be calculated)
@@ -115,9 +115,6 @@ def calc_pressure_loss_due_to_bends(Re,d,omega,roh,k_tube=0,n_bends=0,r_bend=1,b
     if Re < 4e4 and Re > 4e3:
             Crou = 0.8
     zeta = (Cang*Cre*Crou)/((r_bend/d)**(-0.5))
-    #print "Cang: " +str(Cang)
-    #print "Cre: " +str(Cre)
-    #print "Crou: " +str(Crou)
     if zeta == 0:
         print colored("The pressure loss due to bends could not be calculated","blue")
     delta_p_bends = zeta*roh*0.5*omega**2*n_bends
@@ -129,24 +126,28 @@ def calc_pressure_loss(Re,d,L,omega,roh,k_tube=0,n_bends=0,r_bend=1,bend_angle=0
     lambda_tube = 0.0                                   #Darcy friction factor
     if Re*(k_tube/d) <= 65:                             #hydraulic flat surface
         if Re >= 2320 and Re <= 1e5:
-            lambda_tube = 0.3164*Re**(-0.25)
-            print colored('Darcy friction factor calculated after Blasius','blue')
+            lambda_tube = 0.3164/(Re**(0.25))
+            printOut = colored('Darcy friction factor for pressure loss calculation after Blasius','blue')
         elif Re > 1e5 and Re <= 5*e6:
+            print '3'
             lambda_tube = 0.0032*+0.221*Re**(-0.237)
-            print colored('Darcy friction factor calculated after Nikuradse','blue')
+            printOut = colored('Darcy friction factor for pressure loss calculation after Nikuradse','blue')
         elif Re >= 1e6:
+            print '4'
             #1/lambda_tube_Srt = 1/(2*math.log10(Re*lambda_tube_Srt) - 0.8
-            print colored('function to calculate Darcy Friction factor is not implemented. Try to lower Re or implement iterative solver','red')
+            printOut = colored('Function to calculate Darcy friction factor for pressure loss calculation is not implemented. Try to lower Re or implement iterative solver','red')
             return none
     elif Re*(k_tube/d) > 65 and Re*(k_tube/d) <= 1300:   #Uebergangsbereich
-        print colored('function to calculate Darcy Friction Factor is not implemented. Try to lower Re or implement iterative solver','red')
+        printOut = colored('function to calculate Darcy friction factor for pressure loss calculation is not implemented. Try to lower Re or implement iterative solver','red')
     elif Re*(k_tube/d) > 1300:                           #hydraulic rough surface
         lambda_tube = 0.0055+0.15(k_tube/d)**(1/3)
-        print colored('Darcy Friction Factor calculated after Moody','blue')
+        printOut = colored('Darcy friction factor for pressure loss calculation after Moody','blue')
     delta_p = lambda_tube*L/d*roh/2*omega**2             #Pa pressure loss in one tube
     delta_p_bends = calc_pressure_loss_due_to_bends(Re,d,omega,roh,k_tube,n_bends,r_bend,bend_angle)
+    if delta_p_bends > 0.0:
+        printOut = printOut +colored('\npressure loss due to bends: ' +str(delta_p_bends/100000/n),'blue')
     delta_p = delta_p + delta_p_bends
-    return delta_p
+    return delta_p, printOut;
 
 def calc_outside_wall_temp(d,A,lamda_solid,P,T_innerWall):
     T_outherWall= P*d/(lamda_solid*A)+T_innerWall
@@ -155,6 +156,25 @@ def calc_outside_wall_temp(d,A,lamda_solid,P,T_innerWall):
 def calc_thermal_radiation(A,T,epsylon):
     P_rad= epsylon*BoltzmannConst*(T**4)*A
     return P_rad
+
+def evaluate_and_print_Prandt_Number():
+    print "Prandt Number Pr is:                     " +str(round(Pr,1))
+    if Pr>0.6 and Pr< 160:
+        print colored("Prand Number ideal",'green')
+    if Pr<0.6:
+        print colored("Prand Number too small",'magenta','on_yellow')
+    if Pr>160: 
+        print colored("Prand Number too large", 'red')
+
+def evaluate_and_print_velocity():
+    if omega <= 1.5:
+        print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nIdeal velocity in terms of vibrations','green')
+    if omega <= 3.0 and omega >= 1.5:
+        print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is ok','green')
+    if omega <= 4.0 and omega >= 3.0:
+        print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is too high','grey','on_yellow')
+    if omega >= 4.0:
+        print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is dangerously high, cavities might build up','white','on_red')
 
 
 if v_flow_l_n:
@@ -169,33 +189,12 @@ else:
 
 T_o =  T_i + delta_T                #°C water outlet Temperature
 T_av = (T_i+T_o)/2                  #°C average water Temp
-
-
-
-
 omega= v_flow/A                     #m/s flow speed of water
-if omega <= 1.5:
-    print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nIdeal velocity in terms of vibrations','green')
-if omega <= 3.0 and omega >= 1.5:
-    print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is ok','green')
-if omega <= 4.0 and omega >= 3.0:
-    print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is too high','grey','on_yellow')
-if omega >= 4.0:
-    print colored('Velocity omega is:                       '+str(round(omega,1))+' m/s\nVelocity is dangerously high, cavities might build up','white','on_red')
+
 
 #calculate Reynolds  and Prandt Number
 Re= omega*d/mue_water               #dimension less
 Pr = nue_water*Cp_water/lambda_water
-
-print "Prandt Number Pr is:                     " +str(round(Pr,1))
-if Pr>0.6 and Pr< 160:
-    print colored("Prand Number ideal",'green')
-if Pr<0.6:
-    print colored("Prand Number too small",'magenta','on_yellow')
-if Pr>160: 
-    print colored("Prand Number too large", 'red')
-
-print "The Reynolds Number Re is:               "+str(round(Re,1))
 
 #calculate Nusselt Number
 if Re>3000 and Re<5e6 and model == 'Gnielinski':
@@ -216,17 +215,19 @@ elif Re>2300 and Re<1e6:
     f6= 1+(d/l)**(2/3)
 
 elif Re<2300:
-    print colored("Flow condition is laminar, Nu will be calculated after Wagner 3.28",'blue')
+    print colored("Flow condition is laminar, Nu is static after Wagner 3.28",'blue')
     Re_status= "laminar"
     Nu = 3.66
-print "Nusselt Number Nu is: Nu =               " +str(round(Nu,1))
+
 
 alpha= Nu*lambda_water/d                                                        #W/(m**2*K), heat transfer coefficient Alpha
 T_chan_av = P/(d*math.pi*l*alpha) +T_av                                         #°C average wall temperature on the surface of the fluid channel
 T_chan_max = P/(d*math.pi*l*alpha) +T_o                                         #°C maximum wall temperature on the surface of the fluid channel
 T_chan_in = P/(d*math.pi*l*alpha) +T_i                                          #°C minimum wall temperature on the surface of the fluid channel
 T_chan_counter = T_chan_in+(T_chan_max-T_chan_in)*counterflow_factor            #°C weigthed wall temperature on the surface of the fluid channel under counterflow condition
-delta_p = calc_pressure_loss(Re,d,l,omega,roh_water,k_tube,n_bends,r_bend,bend_angle)/100000/n                   #bar, pressure loss in tube in bar for all parallel tubes
+delta_p, printOutPressure= calc_pressure_loss(Re,d,l,omega,roh_water,k_tube,n_bends,r_bend,bend_angle)
+delta_p = delta_p/100000/n                                                      #bar, pressure loss in tube in bar for all parallel tubes
+
 if counterflow==False:
     T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_max)
 else:
@@ -234,27 +235,39 @@ else:
 P_rad = calc_thermal_radiation(area*7,T_outherWall_max+273.15,epsylon_solid)    #factor area*7 accounts for cubic volume from area plus some estimated factor
 
 #generate output
-print "The heat transfer coefficient Alpha is:  " +str(round(alpha,1))+" W/(m**2*K)"
-print "The inlet channel wall temperature is    " +str(round(T_chan_in,1)) +" °C"
-if counterflow==False:
-    print "The average channel wall temperature is  " +str(round(T_chan_av,1)) +" °C"
-    if T_chan_max < 100:
-        print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'green')
-    else:
-        print colored("The max. channel wall temperature is     " +str(round(T_chan_max,1)) +" °C",'red')
+evaluate_and_print_velocity()
 
+if counterflow==False:
+    if T_chan_max < 100:
+        print colored("The max. channel wall temperature is:    " +str(round(T_chan_max,1)) +" °C",'green')
+    else:
+        print colored("The max. channel wall temperature is:    " +str(round(T_chan_max,1)) +" °C",'red')
 else:
     if T_chan_max < 100:
-        print colored("The max. channel wall temperature is     " +str(round(T_chan_counter,1)) +" °C",'green')
+        print colored("The max. channel wall temperature is:    " +str(round(T_chan_counter,1)) +" °C",'green')
     else:
-        print colored("The max. channel wall temperature is     " +str(round(T_chan_counter,1)) +" °C",'red')
-print "The max. outside wall temperature is     " +str(round(T_outherWall_max,1)) +" °C"
+        print colored("The max. channel wall temperature is:    " +str(round(T_chan_counter,1)) +" °C",'red')
 
-print "The pressure loss in the tube is         " +str(round(delta_p,2)) +" bar"
+
+
+print "The pressure loss in the tube is:        " +str(round(delta_p,2)) +" bar"
 if delta_p > 4:
-    print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red') 
+    print colored("Warning: Pressure difference is too high, should be redesigned if possible",'red')
 
-print "The power loss due to radiation is       " +str(round(P_rad,1)) +" W"
-print "The values for delta_t and for the volume flow with accounting for thermal radiation are: "
+print "The power loss due to radiation is:      " +str(round(P_rad,1)) +" W"
+
+print  colored("\nAdditional vallues and information:", "blue")
+evaluate_and_print_Prandt_Number()
+print "The Reynolds Number Re is:               " +str(round(Re,1))
+print "Nusselt Number Nu is:                    " +str(round(Nu,1))
+print "The heat transfer coefficient Alpha is:  " +str(round(alpha,1))+" W/(m**2*K)"
+print "The inlet channel wall temperature is:   " +str(round(T_chan_in,1)) +" °C"
+print "The average channel wall temperature is: " +str(round(T_chan_av,1)) +" °C"
+print "The max. outside wall temperature is:    " +str(round(T_outherWall_max,1)) +" °C"
+print printOutPressure
+
+print colored("\nThe values for delta_t and for the volume flow with accounting for thermal radiation are:","blue")
 calc_deltaT_from_volumeFlow(P-P_rad,Cp_water,roh_water,v_flow)
 calc_water_flow_from_deltaT(P-P_rad,Cp_water,roh_water,delta_T)
+
+
