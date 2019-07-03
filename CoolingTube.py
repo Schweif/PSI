@@ -22,6 +22,31 @@ import math
 P0= 315                 #J/s = W heating power
 T_i = 20                #°C water inlet temperature
 
+#Setup of the cooling channel
+d= 0.004                #m diameter of water tube
+l= 0.252                #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
+n= 1                    #number of tubes (with the same diameter) in parallel configuration flowing in the same direction
+
+#choose which parameter should be calculated (set to False if it should be calculated)
+delta_T = False         #K difference between inlet and outlet temperature, set to False to calculate delta T
+v_flow_l_n = 2          #l/min volume flow of the water in through all parallel tubes, set to False to calculate volume current in l/min
+model= 'Wagner'         #Select a calculation model for the Nusselt Number. Available models are:
+#'Wagner'         =     DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
+#'Gnielinski'     =     Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
+#'Dittus_Boelter' =     Dittus-Boelter equation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
+
+#Setup of the cooled device (affects maximum outside pressure and radiation) 
+thickness = 0.007       #m thickness of the material between fluid and power in
+width =  0.021          #m irradiation width on which the power is applied
+length = 0.007          #m irradiation length on which the power is applied
+
+#Experimental configurations (pressure differences and counterflow)
+n_bends = 0             #number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
+r_bend = 0.018          #m bending radius of bends inside the cooling channel
+bend_angle = 180        #° bending angle of bends inside the cooling channel
+counterflow= False      #boolean, specifiy if the cooling tubes run in counteflow mode or not; If in counterflow the average temperture will be used to qualify solid temperatures, default False
+counterflow_factor= 0.5 #0..1, a factor defining the fraction between the efficinecy of the counterflow. if set to 1 the water inlet temperature wil be choosen as reference temperature for the maximum solid temperature calculations if set to 0 the maximum water temperature is used (i.e. without counterflow). Default is 0.5
+
 #Constants Water
 roh_water = 1000        #kg/m**3 density at 25 °C
 Cp_water = 4180         #J/(kg*K) thermal capacity
@@ -31,32 +56,7 @@ nue_water = 890e-6      #kg/(m*s) dynamic viscosity at 25 °C
 #Constants Solid
 lambda_solid = 390      #W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390 W/m*K)
 epsylon_solid = 0.6     #w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
-
-#Setup of the cooled device
-thickness = 0.015       #m thickness of the material between fluid and power in
-width =  0.021          #m irradiation width on which the power is applied
-length = 0.007          #m irradiation length on which the power is applied
-
-#Setup of the cooling channel
-d= 0.004                #m diameter of water tube
-l= 0.252                #m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
-n= 1                    #number of tubes (with the same diameter) in parallel configuration flowing in the same direction
-
-#choose which parameter should be calculated (set to False if it should be calculated)
-delta_T = False         # K difference between inlet and outlet temperature, set to False to calculate delta T
-v_flow_l_n = 2          #Volume flow  of the water in l/min through all parallel tubes, set to False to calculate volume current in l/min
-model= 'Wagner'         #Select a calculation model for the Nusselt Number. Available models are:
-#'Wagner'         = DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
-#'Gnielinski'     = Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
-#'Dittus_Boelter' = Dittus-Boelter equation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
-
-#Experimental configurations (Pressure differences and counterflow)
 k_tube = 5e-6           #m surface roughness of the cooling tube
-n_bends = 0             #number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
-r_bend = 0.018          #m bending radius of bends inside the cooling channel
-bend_angle = 180        #° bending angle of bends inside the cooling channel
-counterflow= False      #boolean, specifiy if the cooling tubes run in counteflow mode or not; If in counterflow the average temperture will be used to qualify solid temperatures, default False
-counterflow_factor= 0.5 #0..1, a factor defining the fraction between the efficinecy of the counterflow. if set to 1 the water inlet temperature wil be choosen as reference temperature for the maximum solid temperature calculations if set to 0 the maximum water temperature is used (i.e. without counterflow). Default is 0.5
 
 #CONFIGURATION ENDS HERE
 ############################################################################
@@ -81,7 +81,7 @@ def calc_water_flow_from_deltaT(P,Cp,roh,delta_T):
 def calc_deltaT_from_volumeFlow(P,Cp,roh,v_flow):
     m_flow = v_flow*roh
     delta_T = P/(m_flow*Cp)
-    print "delta T needed is:                       " +str(round(delta_T,1)) +" K"
+    print "Resulting delta T is:                    " +str(round(delta_T,1)) +" K"
     return delta_T
 
 def calc_pressure_loss_due_to_bends(Re,d,omega,roh,k_tube=0,n_bends=0,r_bend=1,bend_angle=0):
@@ -178,11 +178,11 @@ def evaluate_and_print_velocity():
 
 
 if v_flow_l_n:
-    print colored('volume flow ('+str(v_flow_l_n)+' l/min) is given, delta T will be calculated','blue')
+    print colored('Volume flow ('+str(v_flow_l_n)+' l/min) is given, delta T will be calculated','blue')
     v_flow = v_flow_l/(1000.0*60)   #volume flow of the water in m**3/s
     delta_T = calc_deltaT_from_volumeFlow(P,Cp_water,roh_water,v_flow)
 else:
-    print colored('delta T ('+str(delta_T)+' °C) is given, volume flow will be calculated','blue')
+    print colored('Delta T ('+str(delta_T)+' °C) is given, volume flow will be calculated','blue')
     v_flow = calc_water_flow_from_deltaT(P,Cp_water,roh_water,delta_T)
 
 
