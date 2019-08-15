@@ -22,9 +22,9 @@ import re
 
 
 pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
-pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/DiamondI18/'
-maxEnergy = 30000.0  # eV given by flux calculations
-minEnergy = 100.0  # eV given by yield table
+pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/cSAXS_Calcs/FluxScanU19SLS10to10000_EmmY1pm/'
+maxEnergy = 10000.0  # eV given by flux calculations
+minEnergy = 10.0  # eV given by yield table
 distanceFromSource = 10  # m distance from source at which the flux was calculated
 bucketSize = 40 #  eV
 
@@ -176,19 +176,28 @@ def plot2D(x, y, z):
     nx = len(x)
     ny= len(y)
     
+    #xi = np.linspace(-7, 7, nx)
+    #yi = np.linspace(-7, 7, ny)
     xi = np.linspace(xmin, xmax, nx)
     yi = np.linspace(ymin, ymax, ny)
     zi = ml.griddata(x, y, z, xi, yi)
-    plt.contourf(xi, yi, zi, 15, linewidths = 0.5, colors = 'k')
+    plt.contourf(xi, yi, zi, 15, colors = 'k')
     plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
 
     plt.colorbar() 
     #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
-    plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
-    plt.xlim(xmin, xmax)
-    plt.ylim(ymin, ymax)
+    #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
+    plt.xlim(-7, 7)
+    plt.ylim(-7, 7)
+    #plt.xlim(xmin, xmax)
+    #plt.ylim(ymin, ymax)
     plt.show()
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
+
+def normalize(data):
+    norm = (data-data.min())/(data.max()-data.min())
+    return norm
+
 
 
 if __name__ == '__main__':
@@ -200,8 +209,11 @@ if __name__ == '__main__':
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
+    plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]))
     plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
+    plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
     plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
+    plot2D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]))
 
 '''
 x = allFluxes[:,0]
