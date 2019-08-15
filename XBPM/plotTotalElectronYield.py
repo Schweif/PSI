@@ -29,6 +29,7 @@ distanceFromSource = 10  # m distance from source at which the flux was calculat
 bucketSize = 40 #  eV
 
 def prepare_yield_data(pathToYield):
+    """Reads in the electron yield file, converts energies to eV instead of MeV and the cross section to mm²/g instead of cm²/g, removes unneeded vallues and returs a data set with (energy [eV]:cross section [mm²/g]"""
     yieldPerEnergy = []
     yieldPerEnergy = np.genfromtxt(pathToYield, skip_header=18, usecols=(0, 8))
 
@@ -46,11 +47,17 @@ def prepare_yield_data(pathToYield):
     return(yieldPerEnergy)
 
 def sorted_aphanumeric(data):
+    """Ensures that the data is read in from the lowest to the highest energy. Important for the integrate function"""
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
     return sorted(data, key=alphanum_key)
 
 def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
+    """Read in the energy value
+	read in coordinates and fluxes
+    returns a data set with the format (Energy[eV],[x[mm],y[mm],flux[ph/s/mr^2/0.1%]]) all data in one set
+    returns the number of energies in the data set i.e. hoe many [x[mm],y[mm],flux[ph/s/mr^2/0.1%]] arrays are present
+    """
     chdir(pathToFluxes)
     da = []
     i = 0
@@ -71,11 +78,13 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     return(da, noEnergies)
 
 def find_nearest(array, value):
+    """Compares and array to a given value V and returns the closest value inside the array to V"""
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
 def photons_per_energy_bucket(fluxData,bucketSize):
+    """Removes the bandwidth term by multipying the flux density with the bandwidth and dividing it by the bucket size. I.e. changes the fluy density form [ph/s/mr^2/0.1%] to [ph/s/mr^2/bucket] """
     for data in fluxData:
         if type(data)== str:
             Energy = float(data)
@@ -85,6 +94,7 @@ def photons_per_energy_bucket(fluxData,bucketSize):
     return fluxData
 
 def multiply_flux_with_yield(fluxData, yieldPerEnergyData):
+    """Returns yield or weighted flux densities"""
     yieldValue = 0
     for data in fluxData:
         if type(data)== str:
@@ -98,6 +108,7 @@ def multiply_flux_with_yield(fluxData, yieldPerEnergyData):
     return fluxData
 
 def summ_all_weighted_fluxes(weightedFluxes):
+    """summs up all yields per coordinate over the whole energy range"""
     i=0
     summedFluxes= weightedFluxes[1]
     for fluxPerEnergy in weightedFluxes:
@@ -107,6 +118,7 @@ def summ_all_weighted_fluxes(weightedFluxes):
     return summedFluxes
 
 def integrate_all_weigthed_fluxes(weightedFluxes):
+    """integrates all yields per cooridinate over the whole energy range"""
     i=0
     energies = []
     demo = weightedFluxes[1]
@@ -121,7 +133,7 @@ def integrate_all_weigthed_fluxes(weightedFluxes):
     len_ii= len(energies)
     len_i = len(weightedFluxes)
     yarray = np.zeros((len(demo),len(energies)))
-    while j < len(demo): #gehe durch alle coordinaten
+    while j < len(demo): #go throu all coordinates
         i=0 # itteration per energyVallue and arrays        
         ii=0 # itteration per energyVallue and arrays
         for value in weightedFluxes: #gehe durch alle energien
