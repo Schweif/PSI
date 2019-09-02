@@ -8,7 +8,7 @@
 
 
 import numpy as np
-from os import listdir, chdir
+from os import listdir, chdir, path
 from os.path import isfile, join
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm, ticker
@@ -20,13 +20,36 @@ import re
 
 
 
+CRXO = True #Slect source type for Yield data. If True, source is X-Ray Attenuation Length from CRXO website if false it is from Evaluated Nuclear Data File Libary
+pathToYield = '/home/just/Documents/PSI/XBPM/rawData/CRXO_AttenuationLengths/W.txt'
+pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/cSAXS_Calcs/DetailedFluxScanSLS2.0SS_U14/'
+title = path.dirname(pathToFluxes)
+#title = path.basename(title)
+title = 'SLS21_U15_K1.87_100-30000eV'
 
-pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
-pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/cSAXS_Calcs/FluxScanU19SLS10to10000_EmmY1pm/'
-maxEnergy = 10000.0  # eV given by flux calculations
-minEnergy = 10.0  # eV given by yield table
+maxEnergy = 30000.0  # eV given by flux calculations
+minEnergy = 30.0  # eV given by yield table
 distanceFromSource = 10  # m distance from source at which the flux was calculated
 bucketSize = 40 #  eV
+
+def prepare_yield_data_CRXO(pathToYield):
+    """Reads in the electron yield file, converts the attenuation length to cross section to mm²/g, removes unneeded vallues and returs a data set with (energy [eV]:cross section [mm²/g])"""
+    yieldPerEnergy = []
+    yieldPerEnergy = np.genfromtxt(pathToYield, skip_header=2, usecols=(0, 1))
+    correctionFactor = 5
+    #  set energy to eV
+    yieldPerEnergy[:, 0] = yieldPerEnergy[:, 0]
+    #  transpose Attenuation Length to photoinonaization crosssection
+    yieldPerEnergy[:, 1] = 1 / yieldPerEnergy[:, 1] * correctionFactor
+    # remove energies lower than min and higher than max
+    i=0
+    for E in yieldPerEnergy[:,0]:
+        if E < minEnergy or E > maxEnergy:
+            yieldPerEnergy = np.delete(yieldPerEnergy, i, 0)
+            i=i-1
+        i=i+1
+    return(yieldPerEnergy)
+
 
 def prepare_yield_data(pathToYield):
     """Reads in the electron yield file, converts energies to eV instead of MeV and the cross section to mm²/g instead of cm²/g, removes unneeded vallues and returs a data set with (energy [eV]:cross section [mm²/g]"""
@@ -158,6 +181,7 @@ def plot3D(x, y, z):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.2)
+    ax.set_title(title)
     ax.set_xlabel('x, position hor. [mm]')
     ax.set_ylabel('y, position ver. [mm]')
     ax.set_zlabel("Flux, (arbitary)")
@@ -170,6 +194,7 @@ def plot_top_view(x,y,z):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.2)
+    ax.set_title(title)
     ax.set_xlabel('x, position hor. [mm]')
     ax.set_ylabel('y, position ver. [mm]')
     ax.set_zlabel("Flux, (arbitary)")
@@ -180,6 +205,31 @@ def plot_top_view(x,y,z):
     plt.axis('scaled')
     plt.show()
 
+def plot2D_bu(x, y, z): 
+    xmax= np.max(x)
+    ymax= np.max(y)
+    xmin= np.min(x)
+    ymin= np.min(y)
+    nx = len(x)
+    ny= len(y)
+    
+    #xi = np.linspace(-5, 5, nx)
+    #yi = np.linspace(-5, 5, ny)
+    xi = np.linspace(xmin, xmax, nx)
+    yi = np.linspace(ymin, ymax, ny)
+    zi = ml.griddata(x, y, z, xi, yi)
+    ax = plt.contourf(xi, yi, zi, 15, colors = 'k')
+    plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
+    plt.colorbar() 
+    #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
+    #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
+    plt.xlim(-7, 7)
+    plt.ylim(-7, 7)
+    #plt.xlim(xmin, xmax)
+    #plt.ylim(ymin, ymax)
+    plt.show()
+    #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
+
 def plot2D(x, y, z): 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -188,15 +238,20 @@ def plot2D(x, y, z):
     nx = len(x)
     ny= len(y)
     
-    #xi = np.linspace(-7, 7, nx)
-    #yi = np.linspace(-7, 7, ny)
+    #xi = np.linspace(-5, 5, nx)
+    #yi = np.linspace(-5, 5, ny)
     xi = np.linspace(xmin, xmax, nx)
     yi = np.linspace(ymin, ymax, ny)
     zi = ml.griddata(x, y, z, xi, yi)
-    plt.contourf(xi, yi, zi, 15, colors = 'k')
-    plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
+    CS = plt.contourf(xi, yi, zi, 15, colors = 'k')
+    CS2 = plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
+    plt.title(title)
+    plt.xlabel('x, position hor. [mm]')
+    plt.ylabel('y, position ver. [mm]')
 
-    plt.colorbar() 
+    cbar = plt.colorbar(CS2) 
+    cbar.ax.set_ylabel("Flux, (arbitary)")
+    
     #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
     #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
     plt.xlim(-7, 7)
@@ -213,7 +268,10 @@ def normalize(data):
 
 
 if __name__ == '__main__':
-    yieldPerEnergy = prepare_yield_data(pathToYield)
+    if CRXO == True:
+        yieldPerEnergy = prepare_yield_data_CRXO(pathToYield)
+    else:
+        yieldPerEnergy = prepare_yield_data(pathToYield)
     fluxData, noEnegries = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
     fluxData = photons_per_energy_bucket(fluxData, bucketSize)
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
@@ -222,8 +280,8 @@ if __name__ == '__main__':
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]))
-    plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
-    plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
+    #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
+    #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
     plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     plot2D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]))
 
