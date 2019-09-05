@@ -17,15 +17,20 @@ import matplotlib.mlab as ml
 import scipy
 from scipy import integrate
 import re
+import pandas as pd
 
 
 
-CRXO = True #Slect source type for Yield data. If True, source is X-Ray Attenuation Length from CRXO website if false it is from Evaluated Nuclear Data File Libary
-pathToYield = '/home/just/Documents/PSI/XBPM/rawData/CRXO_AttenuationLengths/W.txt'
-pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/cSAXS_Calcs/DetailedFluxScanSLS2.0SS_U14/'
+CRXO = True #Select source type for Yield data. If True, source is X-Ray Attenuation Length from CRXO website if false it is from Evaluated Nuclear Data File Libary
+if CRXO == True:
+    pathToYield = '/home/just/Documents/PSI/XBPM/rawData/CRXO_AttenuationLengths/W.txt'
+else:
+    pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
+pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/Dtl_SLS1_U14_K165_10_30000eV/'
 title = path.dirname(pathToFluxes)
 #title = path.basename(title)
-title = 'SLS21_U15_K1.87_100-30000eV'
+title = 'SLS_U14_K165_30_30000eV_detailed_CRXO'
+autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
 
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 30.0  # eV given by yield table
@@ -177,7 +182,8 @@ def flux_per_mm_sqr(weightedFluxes, distanceFromSource):
     return weightedFluxes
 
 
-def plot3D(x, y, z):
+def plot3D(x, y, z,txt=''):
+    fname = title + '_3D' + txt + '.png'
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.2)
@@ -188,9 +194,15 @@ def plot3D(x, y, z):
     plt.xlim(-5,5)
     plt.ylim(-5,5)
     plt.axis('scaled')
-    plt.show()
+    if autoSave == True:
+        plt.savefig(fname)
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
 
-def plot_top_view(x,y,z):
+def plot_top_view(x,y,z,txt=''):
+    fname = title + '_3D_top' + txt + '.png'
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.2)
@@ -203,9 +215,16 @@ def plot_top_view(x,y,z):
     ax.azim = -90
     ax.elev = 90
     plt.axis('scaled')
-    plt.show()
+    if autoSave == True:
+        plt.savefig(fname)
+        plt.close()
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
 
-def plot2D_bu(x, y, z): 
+def plot2D_bu(x, y, z,txt=''):
+    fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
     xmin= np.min(x)
@@ -227,10 +246,18 @@ def plot2D_bu(x, y, z):
     plt.ylim(-7, 7)
     #plt.xlim(xmin, xmax)
     #plt.ylim(ymin, ymax)
-    plt.show()
+    if autoSave == True:
+        plt.savefig(fname)
+        plt.close()
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
+
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
 
-def plot2D(x, y, z): 
+def plot2D(x, y, z,txt=''):
+    fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
     xmin= np.min(x)
@@ -258,13 +285,25 @@ def plot2D(x, y, z):
     plt.ylim(-7, 7)
     #plt.xlim(xmin, xmax)
     #plt.ylim(ymin, ymax)
-    plt.show()
+    if autoSave == True:
+        plt.savefig(fname)
+        plt.close()
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
 
 def normalize(data):
     norm = (data-data.min())/(data.max()-data.min())
     return norm
 
+def saveToCSV(x,y,z):
+    d= {'x horizontal [mm]': x, 'y horizontal [mm]': y, 'z weighted flux [arb]': z}
+    df = pd.DataFrame(data=d)
+    df.to_csv(title + '.csv')
+
+    
 
 
 if __name__ == '__main__':
@@ -272,18 +311,20 @@ if __name__ == '__main__':
         yieldPerEnergy = prepare_yield_data_CRXO(pathToYield)
     else:
         yieldPerEnergy = prepare_yield_data(pathToYield)
-    fluxData, noEnegries = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
+    fluxData, noEnergies = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
+    print str(noEnergies) +' energy data sets read in.'
     fluxData = photons_per_energy_bucket(fluxData, bucketSize)
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
     #allFluxes= summ_all_weighted_fluxes(fluxDataYielded)
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
+    saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
-    plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]))
+    plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
     plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
-    plot2D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]))
+    plot2D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
 
 '''
 x = allFluxes[:,0]
