@@ -1,3 +1,5 @@
+#!/usr/bin/python2.7
+# -*- coding: utf-8 -*-
 #imports for 3D Ploting of collected data
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
@@ -12,15 +14,21 @@ import pylab as plb
 from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
 
+csv=True
 
-DataRaw =  '/home/just/Documents/PSI/Flux_5005_MS-SLS1.dat'
+DataRaw =  '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/Dtl_SLS1_U14_K165_10_30000eV/SLS_U14_K165_30_30000eV_detailed_CRXO.csv'
 dist_from_source = 10 #m
 import numpy as np #did not work on first imort doing it twice instead
-da= np.genfromtxt(DataRaw,skip_header=10, usecols=(0, 1, 2))
+
+if csv== True:
+    da= np.genfromtxt(DataRaw,delimiter=",",skip_header=1, usecols=(1, 2, 3))
+else:
+    da= np.genfromtxt(DataRaw,skip_header=10, usecols=(0, 1, 2))
 
 xdata= da[:,0]
 ydata= da[:,1]
 zdata= da[:,2]
+
 
 
 ax = plt.axes(projection='3d')
@@ -101,9 +109,10 @@ def FitAndPlot2DGauss(axis):
         n= len(y)
         mean = sum(x * y) / sum(y)
         sigma = np.sqrt(sum(y * (x - mean)**2) / sum(y))
-    print "***********************"
-    print "* Results for "+axis +" -axis *"
-    print "***********************"
+    print "*********************************"
+    print "* Results for "+axis +" - axis          *"
+    print "* (x = horizontal, y = vertical)*"
+    print "*********************************"
     print "sigma = " +str(sigma) +" mm"
     print "sigma = " +str(sigma/dist_from_source) +" mrad"
     print "3 sigma = " +str(3*sigma) +" mm"
