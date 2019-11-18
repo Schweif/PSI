@@ -173,20 +173,9 @@ def calc_pressure_loss(Re, d, L, omega, roh, k_tube=0, n_bends=0, r_bend=1, bend
     return delta_p, printOut
 
 
-def calc_outside_wall_temp(d, A, lamda_solid, P, T_innerWall):
-    T_outherWall = P * d / (lamda_solid * A) + T_innerWall
-    return T_outherWall
-
-
 def calc_outside_wall_temp2(d, lamda_solid, T_innerWall):
     pdens_mm = (P_dens / dist ** 2) * math.sin(math.radians(tilt))
     T_outherWall = pdens_mm*1e6 * d / (2 * lamda_solid) + T_innerWall #Polifke, Kopitz; Wärmeübertragung; Pearson 2005; 3.32 and 3.33
-    return T_outherWall, pdens_mm
-
-
-def calc_outside_wall_temp3(d, lamda_solid, T_water, alpha):
-    pdens_mm = (P_dens / dist ** 2) * math.sin(math.radians(tilt))
-    T_outherWall = (pdens_mm*1e6 * d / (2 * lamda_solid))*(1 +(2 * lamda_solid)/(alpha*d)) + T_water #Polifke, Kopitz; Wärmeübertragung; Pearson 2005; 3.32 and 3.33
     return T_outherWall, pdens_mm
 
 
@@ -281,8 +270,10 @@ if counterflow is False:
 else:
     T_outherWall_max, Pdens_mm = calc_outside_wall_temp2(distance, lambda_solid, T_chan_counter)
 
+
 P_rad = calc_thermal_radiation(area, T_outherWall_max + 273.15,
                                epsylon_solid)
+
 
 
 # generate output
@@ -307,8 +298,8 @@ if delta_p > 4:
 print "The power loss due to radiation is:      " + str(round(P_rad, 1)) + " W"
 
 print colored("\nAdditional values and information:", "blue")
-print "The resulting power density at distance and gracing is: " + str(round(Pdens_mm, 1)) + " W/(m**2)"
-print "The heat transfer coefficient Alpha is:  " + str(round(alpha, 1)) + " W/(m**2*K)"
+print "The resulting power density at distance and gracing is: " + str(round(Pdens_mm, 1)) + " W/mm²"
+print "The heat transfer coefficient Alpha is:  " + str(round(alpha, 1)) + " W/(m²*K)"
 print "The max. outside wall temperature is:    " + str(round(T_outherWall_max, 1)) + " °C"
 print "The inlet channel wall temperature is:   " + str(round(T_chan_in, 1)) + " °C"
 print "The average channel wall temperature is: " + str(round(T_chan_av, 1)) + " °C"
@@ -331,6 +322,27 @@ thickness = 0.011   #m thickness of the material between fluid and power in
 height = 0.020      # m height, outside dimension of the cooled device
 width = 0.08       # m width, outside dimension of the cooled device
 length = 0.20      # m lenght, outside dimension of the cooled device
+
+
+def calc_outside_wall_temp(d, A, lamda_solid, P, T_innerWall):
+    T_outherWall = P * d / (lamda_solid * A) + T_innerWall
+    return T_outherWall
+
+
+def calc_outside_wall_temp3(d, lamda_solid, T_water, alpha):
+    pdens_mm = (P_dens / dist ** 2) * math.sin(math.radians(tilt))
+    #T_outherWall = pdens_mm*1e6 * d / (2 * lamda_solid) + T_innerWall
+    T_outherWall = (pdens_mm*1e6 * d / (2 * lamda_solid))*(1 +(2 * lamda_solid)/(alpha*d)) + T_water #Polifke, Kopitz; Wärmeübertragung; Pearson 2005; 3.32 and 3.33
+    return T_outherWall, pdens_mm
+
+
+def calc_chanTemp_withPdens(alpha, T_water):
+    pdens_mm = (P_dens / dist ** 2) * math.sin(math.radians(tilt))
+    T_chan_Pdens = pdens_mm*1e6 / alpha + T_water
+    return T_chan_Pdens
+
+print colored("The max. channel wall temperature using power density is:    " + str(round(calc_chanTemp_withPdens(alpha, T_av), 1)) + " °C", 'yellow')
+
 
 if counterflow==False:
     T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_max)
