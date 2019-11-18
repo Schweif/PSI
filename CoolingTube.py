@@ -10,7 +10,6 @@
 # added pressure loss due to bends
 # improved function calculating outside wall temperature
 # rearranged configuration section for better usability
-# TODO Print out power radiated by thermal radiation
 # TODO Check if  max channel wall temp function can be improved with max outside temp
 # TODO Improve servicing by using more functions
 # TODO Improve print out
@@ -275,7 +274,6 @@ T_chan_counter = T_chan_in + (
 # channel under counter-flow condition
 delta_p, printOutPressure = calc_pressure_loss(Re, d, l, omega, roh_water, k_tube, n_bends, r_bend, bend_angle)
 delta_p = delta_p / 100000 / n  # bar, pressure loss in tube in bar for all parallel tubes
-
 
 
 if counterflow is False:
