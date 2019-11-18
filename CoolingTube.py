@@ -8,7 +8,12 @@
 # added outside wall temperature to output
 # added calculation for thermal radiation
 # added pressure loss due to bends
-# improved function calculating outside wall themeperture
+# improved function calculating outside wall temperature
+# rearranged configuration section for better usability
+# TODO Print out power radiated by thermal radiation
+# TODO Check if  max channel wall temp function can be improved with max outside temp
+# TODO Improve servicing by using more functions
+# TODO Improve print out
 # Version 1.5, Nov 2019
 # David Just, Paul Scherrer Institut
 # david.just@psi.ch
@@ -20,43 +25,48 @@ import math
 ########################################################################
 # CONFIGURATION SECTION
 
-#Experimental Settings
-P_dens= 49940        #W/mrad² maximum power density of the beam
-dist= 10.219        #m distance to source
-tilt= 3             #° gracing angle of incident area
-distance = 0.006    #m thickness of the material between fluid and power in
-
-# Boundary conditions, set according to machine
-P0 = 564.1          # J/s = W heating power
-T_i = 20            # °C water inlet temperature
-
-# Setup of the cooling channel
-d = 0.0044           # m diameter of water tube
-l = 0.180           # m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
-n = 6               # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
-
 # choose which parameter should be calculated (set to False if it should be calculated)
+v_flow_l_n = 2      # l/min volume flow through all parallel tubes, set to False to calculate volume current in l/min
 delta_T = False     # K difference between inlet and outlet temperature, set to False to calculate delta T
-v_flow_l_n = 9      # l/min volume flow through all parallel tubes, set to False to calculate volume current in l/min
 model = 'Wagner'    # Select a calculation model for the Nusselt Number. Available models are:
 # 'Wagner'          = DEFAULT Formula 3.78, from Walter Wagner, Waermeuebertagung, Vogelfachbuch, 5. Ausgabe, 1998
 # 'Gnielinski'      = Gnielinski correlation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
 # 'Dittus_Boelter'  = Dittus-Boelter equation, from: https://en.wikipedia.org/wiki/Nusselt_number, 9.11.2018
 
-# Setup of the cooled device, usde to calculate surface area for radiation: A= W*L*4+2*W*B
-thickness = 0.011   #m thickness of the material between fluid and power in
-height = 0.020      # m height, outside dimension of the cooled device
-width = 0.08       # m width, outside dimension of the cooled device
-length = 0.20      # m lenght, outside dimension of the cooled device
+# Boundary conditions, set according to machine
+P0 = 96             # J/s = W heating power
+T_i = 20            # °C water inlet temperature
 
-# Experimental configurations (pressure differences and counterflow)
+# Setup of the cooling channel
+d = 0.004           # m diameter of water tube
+l = 0.300           # m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
+n = 1               # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
+
+#Experimental Settings
+P_dens= 293         #W/mrad² maximum power density of the beam
+dist= 8.2           #m distance to source
+tilt= 90            #° gracing angle of incident area, if direct use 90 °
+distance = 0.020    #m thickness of the material between fluid and power in
+
+#Settings to calculate max outside (wall) temperature
+P_dens= 293         #W/mrad² maximum power density of the beam
+dist= 8.2           #m distance to source
+tilt= 90            #° gracing angle of incident area, if direct use 90 °
+distance = 0.020    #m thickness of the material between fluid and power in
+
+# Setup of the cooled device, used to calculate surface area for radiation: A= W*L*4+2*W*B
+height = 0.092      # m height, outside dimension of the cooled device
+width = 0.116       # m width, outside dimension of the cooled device
+length = 0.012      # m length, outside dimension of the cooled device
+
+# Experimental configurations (pressure differences and counter-flow)
 n_bends = 1         # number of bend inside the cooling channel, set to 0 to ignore or if straight channel only
 r_bend = 0.010      # m bending radius of bends inside the cooling channel
-bend_angle = 180     # ° bending angle of bends inside the cooling channel
-counterflow = False # boolean, specify if the cooling tubes run in counterflow mode or not;if in counterflow the average temperature will be used to qualify solid temperatures, default False
-counterflow_factor = 0.5  # 0..1, a factor defining the fraction between the efficiency of the counterflow.
-# if set to 1 the water inlet temperature wil be chosen as reference temperature for the maximum solid temperature
-# calculations if set to 0 the maximum water temperature is used (i.e. without counterflow). Default is 0.5
+bend_angle = 180    # ° bending angle of bends inside the cooling channel
+counterflow = False # Boolean, specify if the cooling tubes run in counter-flow mode or not;if in counter-flow the average temperature will be used to qualify solid temperatures, default False
+counterflow_factor = 0.5  # 0..1, a factor defining the fraction between the efficiency of the counter-flow.
+# if set to 1 the water inlet temperature will be chosen as reference temperature for the maximum solid temperature
+# calculations if set to 0 the maximum water temperature is used (i.e. without counter-flow). Default is 0.5
 
 # Constants Water
 roh_water = 1000    # kg/m**3 density at 25 °C
@@ -65,9 +75,9 @@ lambda_water = 0.6  # W/(m*K) thermal conductivity
 nue_water = 890e-6  # kg/(m*s) dynamic viscosity at 25 °C
 
 # Constants Solid
-lambda_solid = 216  # W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390, CVD 2400, Be = 216 W/(m*K))
-epsylon_solid = 0.6 # w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
-k_tube = 2e-5       # m surface roughness of the cooling tube0
+lambda_solid = 390  # W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390, CVD 2400, Be = 216 W/(m*K))
+epsylon_solid = 0.03# w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
+k_tube = 2e-5       # m surface roughness of the cooling tube
 
 # CONFIGURATION ENDS HERE
 ############################################################################
@@ -101,7 +111,7 @@ def calc_pressure_loss_due_to_bends(Re, d, omega, roh, k_tube=0, n_bends=0, r_be
     # www.uni-magdeburg.de/isut/LSS/Lehre/Arbeitsheft/VIII.pdf p.7
     Cang = 0.0  # Constant adapting for bending angle
     Cre = 0.0  # Constant adapting for Reynolds number
-    Crou = 0.0  # Constant abapting for surface roughtness
+    Crou = 0.0  # Constant adapting for surface roughness
     if bend_angle <= 30.0:
         Cang = 0.1
     elif bend_angle > 30.0 and bend_angle <= 45.0:
@@ -177,15 +187,13 @@ def calc_outside_wall_temp(d, A, lamda_solid, P, T_innerWall):
 
 def calc_outside_wall_temp2(d, lamda_solid, T_innerWall):
     pdens_mm = (P_dens / dist ** 2) * math.sin(math.radians(tilt))
-    #T_outherWall = pdens_mm*1e6 * d / lamda_solid + T_innerWall
     T_outherWall = pdens_mm*1e6 * d / (2 * lamda_solid) + T_innerWall #Polifke, Kopitz; Wärmeübertragung; Pearson 2005; 3.32 and 3.33
     return T_outherWall, pdens_mm
 
 
 def calc_outside_wall_temp3(d, lamda_solid, T_water, alpha):
     pdens_mm = (P_dens / dist ** 2) * math.sin(math.radians(tilt))
-    #T_outherWall = pdens_mm*1e6 * d / lamda_solid + T_innerWall
-    T_outherWall = pdens_mm*1e6 * d / (2 * lamda_solid)*(1 +(2 * lamda_solid)/(alpha*d)) + T_water #Polifke, Kopitz; Wärmeübertragung; Pearson 2005; 3.32 and 3.33
+    T_outherWall = (pdens_mm*1e6 * d / (2 * lamda_solid))*(1 +(2 * lamda_solid)/(alpha*d)) + T_water #Polifke, Kopitz; Wärmeübertragung; Pearson 2005; 3.32 and 3.33
     return T_outherWall, pdens_mm
 
 
@@ -197,11 +205,11 @@ def calc_thermal_radiation(A, T, epsylon):
 def evaluate_and_print_Prandt_Number():
     print "Prandt Number Pr is:                     " + str(round(Pr, 1))
     if Pr > 0.6 and Pr < 160:
-        print colored("Prand Number ideal", 'green')
+        print colored("Prandt Number ideal", 'green')
     if Pr < 0.6:
-        print colored("Prand Number too small", 'magenta', 'on_yellow')
+        print colored("Prandt Number too small", 'magenta', 'on_yellow')
     if Pr > 160:
-        print colored("Prand Number too large", 'red')
+        print colored("Prandt Number too large", 'red')
 
 
 def evaluate_and_print_velocity():
@@ -270,30 +278,16 @@ T_chan_max = P / (d * math.pi * l * alpha) + T_o  # °C maximum wall temperature
 T_chan_in = P / (d * math.pi * l * alpha) + T_i  # °C minimum wall temperature on the surface of the fluid channel
 T_chan_counter = T_chan_in + (
             T_chan_max - T_chan_in) * counterflow_factor    # °C weighed wall temperature on the surface of the fluid
-# channel under counterflow condition
+# channel under counter-flow condition
 delta_p, printOutPressure = calc_pressure_loss(Re, d, l, omega, roh_water, k_tube, n_bends, r_bend, bend_angle)
 delta_p = delta_p / 100000 / n  # bar, pressure loss in tube in bar for all parallel tubes
 
-
-'''
-if counterflow==False:
-    T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_max)
-else:
-    T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_counter) 
-
-if counterflow is False:
-    T_outherWall_max, Pdens_mm = calc_outside_wall_temp3(distance, lambda_solid, T_in, alpha)
-else:
-    T_outherWall_max, Pdens_mm = calc_outside_wall_temp3(distance, lambda_solid, T_in, alpha)
-    print "Outside wall temp. claculation not yet implementet for counterflow" #TODO
-'''
 
 
 if counterflow is False:
     T_outherWall_max, Pdens_mm = calc_outside_wall_temp2(distance, lambda_solid, T_chan_max)
 else:
     T_outherWall_max, Pdens_mm = calc_outside_wall_temp2(distance, lambda_solid, T_chan_counter)
-
 
 P_rad = calc_thermal_radiation(area, T_outherWall_max + 273.15,
                                epsylon_solid)
@@ -335,3 +329,25 @@ print printOutPressure
 print colored("\nThe values for delta_t and for the volume flow with accounting for thermal radiation are:", "blue")
 calc_deltaT_from_volumeFlow(P - P_rad, Cp_water, roh_water, v_flow)
 calc_water_flow_from_deltaT(P - P_rad, Cp_water, roh_water, delta_T)
+
+
+
+#Deprecated: keep for a while:
+'''
+# Setup of the cooled device, usde to calculate surface area for radiation: A= W*L*4+2*W*B
+thickness = 0.011   #m thickness of the material between fluid and power in
+height = 0.020      # m height, outside dimension of the cooled device
+width = 0.08       # m width, outside dimension of the cooled device
+length = 0.20      # m lenght, outside dimension of the cooled device
+
+if counterflow==False:
+    T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_max)
+else:
+    T_outherWall_max = calc_outside_wall_temp(thickness,area,lambda_solid,P0,T_chan_counter) 
+
+if counterflow is False:
+    T_outherWall_max, Pdens_mm = calc_outside_wall_temp3(distance, lambda_solid, T_i, alpha)
+else:
+    T_outherWall_max, Pdens_mm = calc_outside_wall_temp3(distance, lambda_solid, T_i, alpha)
+    print "Outside wall temp. claculation not yet implementet for counterflow" #TODO
+'''
