@@ -42,12 +42,6 @@ d = 0.004           # m diameter of water tube
 l = 0.300           # m length of water tube in series e.g. if you have two parallel tube with a length l each, enter l
 n = 1               # number of tubes (with the same diameter) in parallel configuration flowing in the same direction
 
-#Experimental Settings
-P_dens= 293         #W/mrad² maximum power density of the beam
-dist= 8.2           #m distance to source
-tilt= 90            #° gracing angle of incident area, if direct use 90 °
-distance = 0.020    #m thickness of the material between fluid and power in
-
 #Settings to calculate max outside (wall) temperature
 P_dens= 293         #W/mrad² maximum power density of the beam
 dist= 8.2           #m distance to source
