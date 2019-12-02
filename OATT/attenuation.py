@@ -21,7 +21,7 @@ from itertools import combinations
 import sys
 import re
 
-pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten_2/'
+pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten_2b/second_att/'
 duplicateFoils = False  # specify if the foils will be duplicated for redundancy and for more possible combinations
 nArms = 6   #Specifiy the ammount of arms to be equiped with foils 
 autoSave = True
