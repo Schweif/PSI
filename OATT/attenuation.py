@@ -9,23 +9,40 @@
 
 #calculates and displays all posible attenuations of a set of different filter foils to be used in the solid state attenuator at the ATHOS beam line at SwissFEL
 #Maximum size of 24 foils can be corectly calculated
+#TODO: Funtion which depends on number of arms is not properly implemented
 
 
 
 import numpy as np
-from os import listdir, chdir
+from os import listdir, chdir, path
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 from itertools import combinations
 import sys
+import re
 
-pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten/'
-duplicateFoils = True  # specify if the foils will be duplicated for redundancy and for more possible combinations
+pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten_2/'
+duplicateFoils = False  # specify if the foils will be duplicated for redundancy and for more possible combinations
+nArms = 6   #Specifiy the ammount of arms to be equiped with foils 
+autoSave = True
+fname = 'Attenuation.png'
+
+
+
+def sorted_aphanumeric(data):
+    """Sorts the Foils according to theitr alpha numeric order. I.e. allows to specify which foil to use where e.g. 01_Si2u.dat;02_Al_1u.dat"""
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+    return sorted(data, key=alphanum_key)
+
 
 # append the rawData from all Foils
 i = 0
 da = []
-for f in listdir(pathToAttenuatorFoils):
+
+files = listdir(pathToAttenuatorFoils)
+files = sorted_aphanumeric(files)
+for f in files:
     print f
     chdir(pathToAttenuatorFoils)
     if isfile(join(pathToAttenuatorFoils, f)) and f.endswith('.dat'):
@@ -62,36 +79,57 @@ while noOfFoilsToCombine <= noOfFoils or noOfFoilsToCombine <= 12:
     possibleCombinations.extend(list(comb))
     noOfFoilsToCombine = noOfFoilsToCombine + 1
 
-# exclude invalid combinations:
+# exclude invalid combinations, for 6 independend arms:
 newComb = []
 for i in possibleCombinations:
     # exclude combinations on the same arm
-    if set([0, 12]).issubset(i):
+    if set([0, nArms]).issubset(i):
         continue
-    elif set([1, 13]).issubset(i):
+    elif set([1, nArms+1]).issubset(i):
         continue
-    elif set([2, 14]).issubset(i):
+    elif set([2, nArms+2]).issubset(i):
         continue
-    elif set([3, 15]).issubset(i):
+    elif set([3, nArms+3]).issubset(i):
         continue
-    elif set([4, 16]).issubset(i):
+    elif set([4, nArms+4]).issubset(i):
         continue
-    elif set([5, 17]).issubset(i):
-        continue
-    elif set([6, 18]).issubset(i):
-        continue
-    elif set([7, 19]).issubset(i):
-        continue
-    elif set([8, 20]).issubset(i):
-        continue
-    elif set([9, 21]).issubset(i):
-        continue
-    elif set([10, 22]).issubset(i):
-        continue
-    elif set([11, 23]).issubset(i):
+    elif set([5, nArms+5]).issubset(i):
         continue
     else:
         newComb.append(i)
+
+# exclude invalid combinations, for 12 independend arms:
+'''
+newComb = []
+for i in possibleCombinations:
+    # exclude combinations on the same arm
+    if set([0, nArms]).issubset(i):
+        continue
+    elif set([1, nArms+1]).issubset(i):
+        continue
+    elif set([2, nArms+2]).issubset(i):
+        continue
+    elif set([3, nArms+3]).issubset(i):
+        continue
+    elif set([4, nArms+4]).issubset(i):
+        continue
+    elif set([5, nArms+5]).issubset(i):
+        continue
+    elif set([6, nArms+6]).issubset(i):
+        continue
+    elif set([7, nArms+7]).issubset(i):
+        continue
+    elif set([8, nArms+8]).issubset(i):
+        continue
+    elif set([9, nArms+9]).issubset(i):
+        continue
+    elif set([10, nArms+10]).issubset(i):
+        continue
+    elif set([11, nArms+11]).issubset(i):
+        continue
+    else:
+        newComb.append(i)
+'''
 
 # display difference before and after excluding some combinations; debug only
 noCombinations = len(possibleCombinations)
@@ -150,4 +188,10 @@ plt.xlim((250, 2000))  # set the xlim to left, right
 plt.xlabel('Photon Energy [eV]')
 plt.ylabel('Transmission')
 plt.legend()
-plt.show()
+if autoSave == True:
+    plt.savefig(fname)
+    plt.close()
+    plt.clf()
+else:
+    plt.show()
+    plt.clf()
