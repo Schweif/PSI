@@ -17,9 +17,11 @@ from scipy import asarray as ar,exp
 
 csv=False
 
-DataRaw =  '/home/just/Documents/PSI/rawData/06_U14_SLS1_K1.5_PowerDensity_10m.dta'
+DataRaw =  '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/detailed_enegry_scan/SLS2SS_U14_K1.5_dtl/SLS2SS_U14_PowerDensity_at_10m.dta'
 dist_from_source = 10 #m
 
+title = 'PDens_SLS2_SS_U14_K1.5_30_30000eV_dtl'
+autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
 
 def Gauss(x,a,x0,sigma):
     return a*exp(-(x-x0)**2/(2*sigma**2))
@@ -74,8 +76,12 @@ def FitAndPlot2DGauss(axis):
 def plot2D(x, y, z,txt=''):
     if not 'title' in globals():
         title = ''
+    else:
+        global title 
     if not 'autoSave' in globals():
         autoSave = False
+    else:
+        global autoSave
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -91,12 +97,13 @@ def plot2D(x, y, z,txt=''):
     zi = ml.griddata(x, y, z, xi, yi)
     CS = plt.contourf(xi, yi, zi, 15, colors = 'k')
     CS2 = plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
-    plt.title(title)
+    plt.title(fname)
     plt.xlabel('x, position hor. [mm]')
     plt.ylabel('y, position ver. [mm]')
 
     cbar = plt.colorbar(CS2) 
-    cbar.ax.set_ylabel("Flux, (arbitary)")
+    cbar.ax.set_ylabel("Power Density [kW/mrad^2]")
+    #cbar.ax.set_ylabel("Flux, (arbitary)")
     
     #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
     #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
@@ -166,9 +173,10 @@ ax = plt.axes(projection='3d')
 ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='Greens')
 plt.show()
 
-#2D Colour Plot
-plot2D(xdata, ydata, zdata)
 
 #Cut Plots    
 FitAndPlot2DGauss('x')
 FitAndPlot2DGauss('y')
+
+#2D Colour Plot
+plot2D(xdata, ydata, zdata)
