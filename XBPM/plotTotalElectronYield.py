@@ -26,10 +26,10 @@ if CRXO == True:
     pathToYield = '/home/just/Documents/PSI/XBPM/rawData/CRXO_AttenuationLengths/W.txt'
 else:
     pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
-pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/Dtl_SLS1_U14_K165_10_30000eV/'
+pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/detailed_enegry_scan/SLS2SS_U14_K1.5_dtl/FluxScans/'
 title = path.dirname(pathToFluxes)
 #title = path.basename(title)
-title = 'SLS_U14_K165_30_30000eV_detailed_CRXO'
+title = 'SLS2_SS_U14_K1.5_30_30000eV_dtl'
 autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
 
 maxEnergy = 30000.0  # eV given by flux calculations
