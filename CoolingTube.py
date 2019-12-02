@@ -10,7 +10,6 @@
 # added pressure loss due to bends
 # improved function calculating outside wall temperature
 # rearranged configuration section for better usability
-# TODO Check if  max channel wall temp function can be improved with max outside temp
 # TODO Improve servicing by using more functions
 # TODO Improve print out
 # Version 1.5, Nov 2019
@@ -69,7 +68,7 @@ nue_water = 890e-6  # kg/(m*s) dynamic viscosity at 25 °C
 
 # Constants Solid
 lambda_solid = 390  # W/(m*K) thermal conductivity of the wall material CuCr1Zr= 320, Glidcop =365, Cu =390, CVD 2400, Be = 216 W/(m*K))
-epsylon_solid = 0.03# w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
+epsylon_solid = 0.04# w/o unit, emission number e.g. Cu polished = 0.04, Cu oxidized = 0.6, black colored 0.9
 k_tube = 2e-5       # m surface roughness of the cooling tube
 
 # CONFIGURATION ENDS HERE
@@ -273,8 +272,6 @@ else:
 
 P_rad = calc_thermal_radiation(area, T_outherWall_max + 273.15,
                                epsylon_solid)
-
-
 
 # generate output
 evaluate_and_print_velocity()
