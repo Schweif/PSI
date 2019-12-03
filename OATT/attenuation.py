@@ -21,11 +21,11 @@ from itertools import combinations
 import sys
 import re
 
-pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten_2b/second_att/'
+pathToAttenuatorFoils = '/home/just/Documents/PSI/OATT/materials/selection18Kirsten_2d/'
 duplicateFoils = False  # specify if the foils will be duplicated for redundancy and for more possible combinations
 nArms = 6   #Specifiy the ammount of arms to be equiped with foils 
 autoSave = True
-fname = 'Attenuation.png'
+fname = 'Attenuation_d2.png'
 
 
 
@@ -83,17 +83,41 @@ while noOfFoilsToCombine <= noOfFoils or noOfFoilsToCombine <= 12:
 newComb = []
 for i in possibleCombinations:
     # exclude combinations on the same arm
-    if set([0, nArms]).issubset(i):
+    if set([0, 1]).issubset(i):
         continue
-    elif set([1, nArms+1]).issubset(i):
+    elif set([0, 2]).issubset(i):
         continue
-    elif set([2, nArms+2]).issubset(i):
+    elif set([1, 2]).issubset(i):
         continue
-    elif set([3, nArms+3]).issubset(i):
+    elif set([3, 4]).issubset(i):
         continue
-    elif set([4, nArms+4]).issubset(i):
+    elif set([3, 5]).issubset(i):
         continue
-    elif set([5, nArms+5]).issubset(i):
+    elif set([4, 5]).issubset(i):
+        continue
+    elif set([6, 7]).issubset(i):
+        continue
+    elif set([6, 8]).issubset(i):
+        continue
+    elif set([7, 8]).issubset(i):
+        continue
+    elif set([9, 10]).issubset(i):
+        continue
+    elif set([9, 11]).issubset(i):
+        continue
+    elif set([10, 11]).issubset(i):
+        continue
+    elif set([12, 13]).issubset(i):
+        continue
+    elif set([12, 14]).issubset(i):
+        continue
+    elif set([13, 14]).issubset(i):
+        continue
+    elif set([15, 16]).issubset(i):
+        continue
+    elif set([15, 17]).issubset(i):
+        continue
+    elif set([16, 17]).issubset(i):
         continue
     else:
         newComb.append(i)
