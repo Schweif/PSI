@@ -9,6 +9,7 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 fig = plt.figure()
 ax = fig.gca(projection='3d')
+import os
 
 #imports for Gauss fit
 import pylab as plb
@@ -17,23 +18,30 @@ from scipy import asarray as ar,exp
 
 csv=False
 
-DataRaw =  '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/detailed_enegry_scan/SLS2SS_U14_K1.5_dtl/SLS2SS_U14_PowerDensity_at_10m.dta'
-dist_from_source = 10 #m
+DataRaw =  '/home/just/Documents/PSI/rawData/FluxDensU14Min_01x01_dtl.dta'
+dist_from_source = 1 #m
+yLabel = "Flux Density [ph/s/mrad^2/0.1%BW]" # "Flux, (arbitary)" ; "Power Density [kW/mrad^2]" , "Flux Density [ph/s/mrad^2/0.1%BW]"
 
-title = 'PDens_SLS2_SS_U14_K1.5_30_30000eV_dtl'
-autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
+autoSave = False # Set Ture to automatically Save the Plots in DataRaw
+txt=''
+
+dir = os.path.dirname(DataRaw)
+title= os.path.basename(DataRaw)[:-4]
+
 
 def Gauss(x,a,x0,sigma):
     return a*exp(-(x-x0)**2/(2*sigma**2))
 
 def FitAndPlot2DGauss(axis):
     if axis == 'x':
+        fname = title + '_x' + txt + '.png' 
         sigma = sigmaX
         mean = meanX
         n = nX
         x= y0xdata
         y= y0zdata
     if axis == 'y':
+        fname = title + '_y' + txt + '.png' 
         sigma = sigmaY
         mean = meanY
         n = nY
@@ -68,20 +76,18 @@ def FitAndPlot2DGauss(axis):
     plt.legend()
     plt.title(axis+' Axis')
     plt.xlabel('length (mm)')
-    plt.ylabel('PowerDens (W/mm**2)')
+    plt.ylabel(yLabel)
     plt.text(1,0,"sigma = " +str(round(sigmaN,3)) +" mm", fontsize=12, horizontalalignment='left', verticalalignment='bottom')
-    plt.show()  
+    if autoSave == True:
+        plt.savefig(dir+'/'+fname)
+        plt.close()
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
 
   
 def plot2D(x, y, z,txt=''):
-    if not 'title' in globals():
-        title = ''
-    else:
-        global title 
-    if not 'autoSave' in globals():
-        autoSave = False
-    else:
-        global autoSave
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -102,17 +108,16 @@ def plot2D(x, y, z,txt=''):
     plt.ylabel('y, position ver. [mm]')
 
     cbar = plt.colorbar(CS2) 
-    cbar.ax.set_ylabel("Power Density [kW/mrad^2]")
-    #cbar.ax.set_ylabel("Flux, (arbitary)")
+    cbar.ax.set_ylabel(yLabel)
     
     #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
     #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
-    plt.xlim(-7, 7)
-    plt.ylim(-7, 7)
-    #plt.xlim(xmin, xmax)
-    #plt.ylim(ymin, ymax)
+    #plt.xlim(-7, 7)
+    #plt.ylim(-7, 7)
+    plt.xlim(xmin, xmax)
+    plt.ylim(ymin, ymax)
     if autoSave == True:
-        plt.savefig(fname)
+        plt.savefig(dir+'/'+fname)
         plt.close()
         plt.clf()
     else:
@@ -169,9 +174,16 @@ sigmaX = np.sqrt(sum(y0zdata*(y0xdata-meanX)**2)/sum(y0zdata))
 
 ##Plot and Print
 #3D Plot
+fname = title + '_3D' + txt + '.png' 
 ax = plt.axes(projection='3d')
 ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='Greens')
-plt.show()
+if autoSave == True:
+    plt.savefig(dir+'/'+fname)
+    plt.close()
+    plt.clf()
+else:
+    plt.show()
+    plt.clf()
 
 
 #Cut Plots    
@@ -179,4 +191,4 @@ FitAndPlot2DGauss('x')
 FitAndPlot2DGauss('y')
 
 #2D Colour Plot
-plot2D(xdata, ydata, zdata)
+plot2D(xdata, ydata, zdata, txt)
