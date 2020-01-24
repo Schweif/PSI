@@ -2,20 +2,14 @@
 # -*- coding: utf-8 -*-
 #imports for 3D Ploting of collected data
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.mlab as ml
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-fig = plt.figure()
-ax = fig.gca(projection='3d')
+import matplotlib.colors as colors
 import os
 
 #imports for Gauss fit
-import pylab as plb
 from scipy.optimize import curve_fit
-from scipy import asarray as ar,exp
-from scipy.interpolate import interp2d
+from scipy import exp
 
 csv=False
 
@@ -43,20 +37,17 @@ def FitAndPlot2DGauss(axis):
         fname = title + '_x' + txt + '.png' 
         sigma = sigmaX
         mean = meanX
-        n = nX
         x= y0xdata
         y= y0zdata
-        j=0
+        j=1
     if axis == 'y':
         fname = title + '_y' + txt + '.png' 
         sigma = sigmaY
         mean = meanY
-        n = nY
         x= x0ydata
         y= x0zdata
-        j=1
+        j=2
     if axis == 0:
-        n= len(y)
         mean = sum(x * y) / sum(y)
         sigma = np.sqrt(sum(y * (x - mean)**2) / sum(y))
 
@@ -102,8 +93,6 @@ def plot2D(x, y, z,txt=''):
     ymax= np.max(y)
     xmin= np.min(x)
     ymin= np.min(y)
-    nx = len(x)
-    ny= len(y)
     X, Y = np.meshgrid(x, y)
 
     N = int(len(z)**.5)
@@ -111,9 +100,13 @@ def plot2D(x, y, z,txt=''):
 
 
     fig, ax = plt.subplots()
-    im = ax.imshow(Z, cmap=cm.rainbow, interpolation='bilinear',#'none'
+    im = ax.imshow(Z,
+                   #norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
+                   cmap=cm.rainbow, 
+                   interpolation='bilinear',
+                   #interpolation='none',
                    origin='lower', extent=[xmin, xmax, ymin, ymax],
-                   vmax=z.max(), vmin=-z.min())
+                   vmax=z.max(), vmin=z.min())
     
     plt.title(fname,pad=25)
     plt.xlabel('x, position hor. ['+xUnit+']')
@@ -178,16 +171,17 @@ sigmaX = np.sqrt(sum(y0zdata*(y0xdata-meanX)**2)/sum(y0zdata))
 
 ##Plot and Print
 #3D Plot
+plt.figure(0)
 fname = title + '_3D' + txt + '.png' 
 ax = plt.axes(projection='3d')
-ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='Greens')
+ax.scatter3D(xdata, ydata, zdata, c=zdata, cmap='rainbow')
 if autoSave == True:
     plt.savefig(dir+'/'+fname)
     plt.close()
     plt.clf()
 else:
     plt.show()
-    plt.clf()
+
 
 
 #Cut Plots    
