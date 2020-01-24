@@ -95,6 +95,39 @@ def plot2D(x, y, z,txt=''):
     ymin= np.min(y)
     nx = len(x)
     ny= len(y)
+    X, Y = np.meshgrid(x, y)
+
+    N = int(len(z)**.5)
+    Z = z.reshape(N, N)
+
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(Z, cmap=cm.rainbow, interpolation='bilinear',#'none'
+                   origin='lower', extent=[xmin, xmax, ymin, ymax],
+                   vmax=z.max(), vmin=-z.min())
+    
+    plt.title(fname,pad=25)
+    plt.xlabel('x, position hor. [mm]')
+    plt.ylabel('y, position ver. [mm]')
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.ax.set_ylabel(yLabel)
+    if autoSave == True:
+        plt.savefig(dir+'/'+fname)
+        plt.close()
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
+
+    '''
+    Deprecatede keep for a while
+    fname = title + '_2D' + txt + '.png' 
+    xmax= np.max(x)
+    ymax= np.max(y)
+    xmin= np.min(x)
+    ymin= np.min(y)
+    nx = len(x)
+    ny= len(y)
     
     #xi = np.linspace(-5, 5, nx)
     #yi = np.linspace(-5, 5, ny)
@@ -124,6 +157,7 @@ def plot2D(x, y, z,txt=''):
         plt.show()
         plt.clf()
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
+    '''
 
 ##Prepare Data
 if csv== True:

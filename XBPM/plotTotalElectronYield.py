@@ -26,15 +26,15 @@ if CRXO == True:
     pathToYield = '/home/just/Documents/PSI/XBPM/rawData/CRXO_AttenuationLengths/W.txt'
 else:
     pathToYield = '/home/just/Documents/PSI/XBPM/rawData/EPDL97_74.dat'
-pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/detailed_enegry_scan/SLS2SS_U14_K1.5_dtl/FluxScans/'
+pathToFluxes = '/home/just/Documents/PSI/XBPM/rawData/ComparisonSLS_SLS2.0/detailed_enegry_scan/SLS2SS_U14_K1.65_n142/FluxScans'
 title = path.dirname(pathToFluxes)
 #title = path.basename(title)
-title = 'SLS2_SS_U14_K1.5_30_30000eV_dtl'
+title = 'SLS2_SS_U14_K1.6_n142_30_30000eV_dtl'
 autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
 
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 30.0  # eV given by yield table
-distanceFromSource = 10  # m distance from source at which the flux was calculated
+distanceFromSource = 1  # m distance from source at which the flux was calculated
 bucketSize = 40 #  eV
 
 def prepare_yield_data_CRXO(pathToYield):
@@ -93,6 +93,7 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     files = sorted_aphanumeric(files)
     for f in files:
         if isfile(join(pathToFluxes, f)) and f.endswith('.dta'):
+            print f
             fo= open(f, "r")
             lines = list(fo)
             Eline = lines[5]
@@ -191,8 +192,8 @@ def plot3D(x, y, z,txt=''):
     ax.set_xlabel('x, position hor. [mm]')
     ax.set_ylabel('y, position ver. [mm]')
     ax.set_zlabel("Flux, (arbitary)")
-    plt.xlim(-5,5)
-    plt.ylim(-5,5)
+    plt.xlim(-0.5,0.5)
+    plt.ylim(-0.5,0.5)
     plt.axis('scaled')
     if autoSave == True:
         plt.savefig(fname)
@@ -210,8 +211,8 @@ def plot_top_view(x,y,z,txt=''):
     ax.set_xlabel('x, position hor. [mm]')
     ax.set_ylabel('y, position ver. [mm]')
     ax.set_zlabel("Flux, (arbitary)")
-    plt.xlim(-5,5)
-    plt.ylim(-5,5)
+    plt.xlim(-0.5,0.5)
+    plt.ylim(-0.5,0.5)
     ax.azim = -90
     ax.elev = 90
     plt.axis('scaled')
@@ -242,8 +243,8 @@ def plot2D_bu(x, y, z,txt=''):
     plt.colorbar() 
     #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
     #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
-    plt.xlim(-7, 7)
-    plt.ylim(-7, 7)
+    plt.xlim(-0.5,0.5)
+    plt.ylim(-0.5, 0.5)
     #plt.xlim(xmin, xmax)
     #plt.ylim(ymin, ymax)
     if autoSave == True:
@@ -257,6 +258,38 @@ def plot2D_bu(x, y, z,txt=''):
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
 
 def plot2D(x, y, z,txt=''):
+    fname = title + '_2D' + txt + '.png' 
+    xmax= np.max(x)
+    ymax= np.max(y)
+    xmin= np.min(x)
+    ymin= np.min(y)
+    nx = len(x)
+    ny= len(y)
+    X, Y = np.meshgrid(x, y)
+
+    N = int(len(z)**.5)
+    Z = z.reshape(N, N)
+
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(Z, cmap=cm.rainbow, interpolation='bilinear',#'none'
+                   origin='lower', extent=[xmin, xmax, ymin, ymax],
+                   vmax=z.max(), vmin=-z.min())
+    
+    plt.title(fname,pad=25)
+    plt.xlabel('x, position hor. [mm]')
+    plt.ylabel('y, position ver. [mm]')
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.ax.set_ylabel(yLabel)
+    if autoSave == True:
+        plt.savefig(dir+'/'+fname)
+        plt.close()
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
+    '''
+    deprecated keep for a while
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -281,8 +314,8 @@ def plot2D(x, y, z,txt=''):
     
     #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
     #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
-    plt.xlim(-7, 7)
-    plt.ylim(-7, 7)
+    plt.xlim(-0.5, 0.5)
+    plt.ylim(-0.5, 0.5)
     #plt.xlim(xmin, xmax)
     #plt.ylim(ymin, ymax)
     if autoSave == True:
@@ -293,6 +326,7 @@ def plot2D(x, y, z,txt=''):
         plt.show()
         plt.clf()
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
+    '''
 
 def normalize(data):
     norm = (data-data.min())/(data.max()-data.min())
