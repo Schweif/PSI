@@ -298,7 +298,7 @@ def plot2D(x, y, z,txt=''):
     cbar = plt.colorbar(im, ax=ax)
     cbar.ax.set_ylabel(yLabel)
     if autoSave == True:
-        plt.savefig(dir+'/'+fname)
+        plt.savefig(fname)
         plt.close()
         plt.clf()
     else:
