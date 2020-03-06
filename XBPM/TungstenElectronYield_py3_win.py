@@ -12,6 +12,7 @@ from os import listdir, chdir, path
 from os.path import isfile, join
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm, ticker
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.mlab as ml
 import scipy
@@ -20,22 +21,24 @@ import re
 import pandas as pd
 
 
-
+#CONFIGURATION
 CRXO = True #Select source type for Yield data. If True, source is X-Ray Attenuation Length from CRXO website if false it is from Evaluated Nuclear Data File Libary
 if CRXO == True:
-    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\W.txt"
+    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\SiC.txt"
 else:
     pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\EPDL97_74.dat"
 pathToFluxes = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Detailed_SLS2SS_U14_k0.4995_n142\AllFLuxes"
-title = path.dirname(pathToFluxes)
+#title = path.dirname(pathToFluxes)+'SiC'
 #title = path.basename(title)
-title = 'SLS2_SS_U14_K0.5_n142_30_30000eV_dtl'
+title = 'SLS2_SS_U14_K0.5_n142_30_30000eV_SiC'
 autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
 yLabel = "Tungsten response (arbitrary)"
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 30.0  # eV given by yield table
 distanceFromSource = 1  # m distance from source at which the flux was calculated
 bucketSize = 40 #  eV
+#CONFIGURATION ENDS HERE
+
 
 def prepare_yield_data_CRXO(pathToYield):
     """Reads in the electron yield file, converts the attenuation length to cross section to mm²/g, removes unneeded vallues and returs a data set with (energy [eV]:cross section [mm²/g])"""
@@ -78,17 +81,19 @@ def prepare_yield_data(pathToYield):
         yieldPerEnergy= np.delete(yieldPerEnergy,0,0)
     return(yieldPerEnergy)
 
+
 def sorted_aphanumeric(data):
     """Ensures that the data is read in from the lowest to the highest energy. Important for the integrate function"""
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
     return sorted(data, key=alphanum_key)
 
+
 def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     """Read in the energy value
 	read in coordinates and fluxes
     returns a data set with the format (Energy[eV],[x[mm],y[mm],flux[ph/s/mr^2/0.1%]]) all data in one set
-    returns the number of energies in the data set i.e. hoe many [x[mm],y[mm],flux[ph/s/mr^2/0.1%]] arrays are present
+    returns the number of energies in the data set i.e. how many [x[mm],y[mm],flux[ph/s/mr^2/0.1%]] arrays are present
     """
     chdir(pathToFluxes)
     da = []
@@ -110,11 +115,13 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     noEnergies = i
     return(da, noEnergies)
 
+
 def find_nearest(array, value):
     """Compares and array to a given value V and returns the closest value inside the array to V"""
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]
+
 
 def photons_per_energy_bucket(fluxData,bucketSize):
     """Removes the bandwidth term by multipying the flux density with the bandwidth and dividing it by the bucket size. I.e. changes the fluy density form [ph/s/mr^2/0.1%] to [ph/s/mr^2/bucket] """
@@ -125,6 +132,7 @@ def photons_per_energy_bucket(fluxData,bucketSize):
         else:
             data[:,2] =data[:,2] * BW / bucketSize
     return fluxData
+
 
 def multiply_flux_with_yield(fluxData, yieldPerEnergyData):
     """Returns yield or weighted flux densities"""
@@ -140,6 +148,7 @@ def multiply_flux_with_yield(fluxData, yieldPerEnergyData):
             data[:,2]= data[:,2]*yieldValue
     return fluxData
 
+
 def summ_all_weighted_fluxes(weightedFluxes):
     """summs up all yields per coordinate over the whole energy range"""
     i=0
@@ -149,6 +158,7 @@ def summ_all_weighted_fluxes(weightedFluxes):
             summedFluxes[:,2]= fluxPerEnergy[:,2]+summedFluxes[:,2]
         i=i+1
     return summedFluxes
+
 
 def integrate_all_weigthed_fluxes(weightedFluxes):
     """integrates all yields per cooridinate over the whole energy range"""
@@ -175,6 +185,7 @@ def integrate_all_weigthed_fluxes(weightedFluxes):
                 ii=ii+1
             i=i+1
         j=j+1
+        
     i=0
     for coordinate in yarray:
         #demo[i][2]= coordinate.sum()
@@ -212,6 +223,7 @@ def plot3D(x, y, z,txt=''):
         plt.show()
         plt.clf()
 
+
 def plot_top_view(x,y,z,txt=''):
     xmax= np.max(x)
     ymax= np.max(y)
@@ -240,7 +252,9 @@ def plot_top_view(x,y,z,txt=''):
         plt.show()
         plt.clf()
 
+
 def plot2D_bu(x, y, z,txt=''):
+    """Depercated Function"""
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -270,8 +284,8 @@ def plot2D_bu(x, y, z,txt=''):
     else:
         plt.show()
         plt.clf()
-
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
+
 
 def plot2D(x, y, z,txt=''):
     fname = title + '_2D' + txt + '.png' 
@@ -282,13 +296,14 @@ def plot2D(x, y, z,txt=''):
     nx = len(x)
     ny= len(y)
     X, Y = np.meshgrid(x, y)
-
+    #Rearrange Data for Image Plot
     N = int(len(z)**.5)
     Z = z.reshape(N, N)
 
-
     fig, ax = plt.subplots()
-    im = ax.imshow(Z, cmap=cm.rainbow, interpolation='bilinear',#'none'
+    im = ax.imshow(Z,
+                   cmap=cm.rainbow, 
+                   interpolation=  'bilinear', #'none',
                    origin='lower', extent=[xmin, xmax, ymin, ymax],
                    vmax=z.max(), vmin=-z.min())
     
@@ -304,8 +319,9 @@ def plot2D(x, y, z,txt=''):
     else:
         plt.show()
         plt.clf()
-    '''
-    deprecated keep for a while
+ 
+    
+def plot2D_Log(x, y, z,txt=''):
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -313,27 +329,25 @@ def plot2D(x, y, z,txt=''):
     ymin= np.min(y)
     nx = len(x)
     ny= len(y)
+    X, Y = np.meshgrid(x, y)
+
+    N = int(len(z)**.5)
+    Z = z.reshape(N, N)
+
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(Z, 
+                   norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
+                   cmap=cm.rainbow, 
+                   interpolation=  'bilinear', #'none',
+                   origin='lower', extent=[xmin, xmax, ymin, ymax],
+                   vmax=z.max(), vmin=z.min())
     
-    #xi = np.linspace(-5, 5, nx)
-    #yi = np.linspace(-5, 5, ny)
-    xi = np.linspace(xmin, xmax, nx)
-    yi = np.linspace(ymin, ymax, ny)
-    zi = ml.griddata(x, y, z, xi, yi)
-    CS = plt.contourf(xi, yi, zi, 15, colors = 'k')
-    CS2 = plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
-    plt.title(title)
+    plt.title(fname,pad=25)
     plt.xlabel('x, position hor. [mm]')
     plt.ylabel('y, position ver. [mm]')
-
-    cbar = plt.colorbar(CS2) 
-    cbar.ax.set_ylabel("Flux, (arbitary)")
-    
-    #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
-    #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
-    plt.xlim(-0.5, 0.5)
-    plt.ylim(-0.5, 0.5)
-    #plt.xlim(xmin, xmax)
-    #plt.ylim(ymin, ymax)
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.ax.set_ylabel(yLabel)
     if autoSave == True:
         plt.savefig(fname)
         plt.close()
@@ -341,19 +355,18 @@ def plot2D(x, y, z,txt=''):
     else:
         plt.show()
         plt.clf()
-    #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
-    '''
-
+        
+        
 def normalize(data):
     norm = (data-data.min())/(data.max()-data.min())
     return norm
 
+
 def saveToCSV(x,y,z):
-    d= {'x horizontal [mm]': x, 'y horizontal [mm]': y, 'z weighted flux [arb]': z}
+    d= {'x horizontal [mm]': x, 'y horizontal [mm]': y, 'z weighted flux [arb.]': z}
     df = pd.DataFrame(data=d)
     df.to_csv(title + '.csv')
-
-    
+ 
 
 
 if __name__ == '__main__':
@@ -369,12 +382,13 @@ if __name__ == '__main__':
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
-    plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
-    plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
+    #plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
+    #plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
     plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     plot2D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
+    plot2D_Log(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'_Log')
 
 '''
 x = allFluxes[:,0]
