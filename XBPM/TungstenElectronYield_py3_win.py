@@ -1,7 +1,7 @@
 #!/usr/bin/python3.7
 # -*- coding: utf-8 -*-
 
-# March 2019
+# Nov 2021
 # Paul Scherrer Institut, PSI
 # David Marco Just
 # david.just@psi.ch
@@ -19,6 +19,7 @@ import scipy
 from scipy import integrate
 import re
 import pandas as pd
+import json
 
 
 #CONFIGURATION
@@ -27,7 +28,7 @@ if CRXO == True:
     pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\SiC.txt"
 else:
     pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\EPDL97_74.dat"
-pathToFluxes = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Detailed_SLS2SS_U14_k0.4995_n142\AllFLuxes"
+pathToFluxes = r"E:\Spectra\02_U14_SLS2.0\2\3"
 #title = path.dirname(pathToFluxes)+'SiC'
 #title = path.basename(title)
 title = 'SLS2_SS_U14_K0.5_n142_30_30000eV_SiC'
@@ -101,7 +102,8 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     files = listdir(pathToFluxes)
     files = sorted_aphanumeric(files)
     for f in files:
-        if isfile(join(pathToFluxes, f)) and f.endswith(".dta"):
+        if isfile(join(pathToFluxes, f)) and f.endswith(".dta"): 
+            """prepares old Spctra data set"""
             print(f)
             fo= open(f, "r")
             lines = list(fo)
@@ -112,6 +114,25 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
                 da.append(Energy)
                 da.append(np.genfromtxt(f, skip_header=10, usecols=(0, 1, 2)))
                 i=i+1
+        if  isfile(join(pathToFluxes, f)) and f.endswith(".json"):
+            """prepares Spectra V11 and grater data sets"""
+            with open(f) as v:
+                data = json.load(v)
+                if 'Output' in data:
+                    print(f)
+                    Energy = data['Output']['Set Value']
+                    da.append(str(Energy))
+                    j=0
+                    arr = np.empty((0,3))
+                    for x in data['Output']['data'][0]:
+                        for y in  data['Output']['data'][1]:
+                            fluxDens = data['Output']['data'][2][j]
+                            j=j+1
+                            arr = np.append(arr, np.array([[x,y,fluxDens]]), axis=0)
+                    da.append(arr)
+                    i=i+1                            
+                else:
+                   pass                   
     noEnergies = i
     return(da, noEnergies)
 
