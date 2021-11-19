@@ -28,16 +28,17 @@ if CRXO == True:
     pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\SiC.txt"
 else:
     pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\EPDL97_74.dat"
-pathToFluxes = r"E:\Spectra\02_U14_SLS2.0\2\3"
+pathToFluxes = r"E:\Spectra\02_U14_SLS2.0"
 #title = path.dirname(pathToFluxes)+'SiC'
-#title = path.basename(title)
-title = 'SLS2_SS_U14_K0.5_n142_30_30000eV_SiC'
+#title = path.basename(title)'
+title = 'U14 @ SLS 2.0 (K1.46,N120)'
 autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
 yLabel = "Tungsten response (arbitrary)"
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 30.0  # eV given by yield table
-distanceFromSource = 1  # m distance from source at which the flux was calculated
+distanceFromSource = 10  # m distance from source at which the flux was calculated
 bucketSize = 40 #  eV
+mrad = True #Sets X and Y axis in Plots to mrad. Set to False if X and Y axis in plots should be mm at distanceFromSource
 #CONFIGURATION ENDS HERE
 
 
@@ -101,6 +102,7 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     i = 0
     files = listdir(pathToFluxes)
     files = sorted_aphanumeric(files)
+    IgnoredFiles = []
     for f in files:
         if isfile(join(pathToFluxes, f)) and f.endswith(".dta"): 
             """prepares old Spctra data set"""
@@ -110,6 +112,7 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
             Eline = lines[5]
             fo.close()
             Energy=Eline[-11:-1]
+        
             if float(Energy) >= minEnergy and float(Energy) <= maxEnergy:
                 da.append(Energy)
                 da.append(np.genfromtxt(f, skip_header=10, usecols=(0, 1, 2)))
@@ -121,19 +124,25 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
                 if 'Output' in data:
                     print(f)
                     Energy = data['Output']['Set Value']
-                    da.append(str(Energy))
-                    j=0
-                    arr = np.empty((0,3))
-                    for x in data['Output']['data'][0]:
-                        for y in  data['Output']['data'][1]:
-                            fluxDens = data['Output']['data'][2][j]
-                            j=j+1
-                            arr = np.append(arr, np.array([[x,y,fluxDens]]), axis=0)
-                    da.append(arr)
-                    i=i+1                            
+                    if Energy >= minEnergy and Energy <= maxEnergy:
+                        da.append(str(Energy))
+                        j=0
+                        arr = np.empty((0,3))
+                        for x in data['Output']['data'][0]:
+                            for y in  data['Output']['data'][1]:
+                                fluxDens = data['Output']['data'][2][j]
+                                j=j+1
+                                arr = np.append(arr, np.array([[x,y,fluxDens]]), axis=0)
+                        da.append(arr)
+                        i=i+1  
+                    else:
+                        IgnoredFiles.append(f)                                             
                 else:
-                   pass                   
+                    IgnoredFiles.append(f)              
+        else:
+            IgnoredFiles.append(f)       
     noEnergies = i
+    print('Ignored files: ',IgnoredFiles)
     return(da, noEnergies)
 
 
@@ -308,7 +317,7 @@ def plot2D_bu(x, y, z,txt=''):
     #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
 
 
-def plot2D(x, y, z,txt=''):
+def plot2D(x, y, z, txt='', unit=''):
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -329,8 +338,8 @@ def plot2D(x, y, z,txt=''):
                    vmax=z.max(), vmin=-z.min())
     
     plt.title(fname,pad=25)
-    plt.xlabel('x, position hor. [mm]')
-    plt.ylabel('y, position ver. [mm]')
+    plt.xlabel('x, position hor. ' +unit)
+    plt.ylabel('y, position ver. ' +unit)
     cbar = plt.colorbar(im, ax=ax)
     cbar.ax.set_ylabel(yLabel)
     if autoSave == True:
@@ -342,7 +351,7 @@ def plot2D(x, y, z,txt=''):
         plt.clf()
  
     
-def plot2D_Log(x, y, z,txt=''):
+def plot2D_Log(x, y, z, txt='', unit=''):
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
@@ -365,8 +374,8 @@ def plot2D_Log(x, y, z,txt=''):
                    vmax=z.max(), vmin=z.min())
     
     plt.title(fname,pad=25)
-    plt.xlabel('x, position hor. [mm]')
-    plt.ylabel('y, position ver. [mm]')
+    plt.xlabel('x, position hor. ' +unit)
+    plt.ylabel('y, position ver. ' +unit)
     cbar = plt.colorbar(im, ax=ax)
     cbar.ax.set_ylabel(yLabel)
     if autoSave == True:
@@ -382,12 +391,11 @@ def normalize(data):
     norm = (data-data.min())/(data.max()-data.min())
     return norm
 
-
-def saveToCSV(x,y,z):
-    d= {'x horizontal [mm]': x, 'y horizontal [mm]': y, 'z weighted flux [arb.]': z}
+def saveToCSV(x,y,z,unit):
+    d= {'x horizontal '+unit: x, 'y horizontal '+unit: y, 'z weighted flux [arb.]': z}
     df = pd.DataFrame(data=d)
     df.to_csv(title + '.csv')
- 
+
 
 
 if __name__ == '__main__':
@@ -402,14 +410,21 @@ if __name__ == '__main__':
     #allFluxes= summ_all_weighted_fluxes(fluxDataYielded)
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
-    saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
+    #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     #plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     #plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
-    plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
-    plot2D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
-    plot2D_Log(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'_Log')
+    if mrad == True:
+            plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],'','mrad')
+            plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, normalize(allFluxes[:,2]),'_Norm','mrad')
+            plot2D_Log(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],'_Log','mrad')
+            #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mrad')
+    else: 
+            plot2D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'','mm')
+            plot2D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm','mm')
+            plot2D_Log(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'_Log','mm')
+            #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mm')
 
 '''
 x = allFluxes[:,0]
