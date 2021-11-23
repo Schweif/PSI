@@ -101,6 +101,13 @@ def plot2D(x, y, z,txt=''):
 
 
     fig, ax = plt.subplots()
+    ''' uncomment this if isobars are wanted
+    #This is used for isobars
+    levels = np.arange(50, 80, 10) #start, end, intervall
+    CS = ax.contour(Z, levels,colors='k', origin='lower', extent=[xmin, xmax, ymin, ymax])
+    ax.clabel(CS, fontsize=9, inline=True,fmt='%1.0f') #fmt is used to edit the digits of the isobars label
+    '''
+    #this plots the background
     im = ax.imshow(Z,
                    #norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
                    cmap=cm.rainbow, 
