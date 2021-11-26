@@ -25,25 +25,25 @@ import json
 #CONFIGURATION
 CRXO = True #Select source type for Yield data. If True, source is X-Ray Attenuation Length from CRXO website if false it is from Evaluated Nuclear Data File Libary
 if CRXO == True:
-    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\SiC.txt"
+    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\W_Stiched.txt"
 else:
     pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\EPDL97_74.dat"
-pathToFluxes = r"E:\Spectra\02_U14_SLS2.0"
+pathToFluxes = r"E:\Spectra\02_U14_SLS2.0\01_RawData"
 #title = path.dirname(pathToFluxes)+'SiC'
 #title = path.basename(title)'
-title = 'U14 @ SLS 2.0 (K1.46,N120)'
-autoSave = True # Set Ture to automatically Save the Plots in pathToFluxes
+title = 'U14 @ SLS 2.0 (K1.46,N120) W_stiched'
+autoSave = True # Set True to automatically save the plots in pathToFluxes
 yLabel = "Tungsten response (arbitrary)"
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 30.0  # eV given by yield table
 distanceFromSource = 10  # m distance from source at which the flux was calculated
-bucketSize = 40 #  eV
+bucketSize = 1 #  eV
 mrad = True #Sets X and Y axis in Plots to mrad. Set to False if X and Y axis in plots should be mm at distanceFromSource
 #CONFIGURATION ENDS HERE
 
 
 def prepare_yield_data_CRXO(pathToYield):
-    """Reads in the electron yield file, converts the attenuation length to cross section to mm²/g, removes unneeded vallues and returs a data set with (energy [eV]:cross section [mm²/g])"""
+    """Reads in the electron yield file, converts the attenuation length to cross section to mm²/g, removes unneeded vallues and returns a data set with (energy [eV]:cross section [mm²/g])"""
     yieldPerEnergy = []
     yieldPerEnergy = np.genfromtxt(pathToYield, skip_header=2, usecols=(0, 1))
     correctionFactor = 5
@@ -66,7 +66,7 @@ def prepare_yield_data_CRXO(pathToYield):
 def prepare_yield_data(pathToYield):
     """Reads in the electron yield file, converts energies to eV instead of MeV and the cross section to mm²/g instead of cm²/g, removes unneeded vallues and returs a data set with (energy [eV]:cross section [mm²/g]"""
     yieldPerEnergy = []
-    yieldPerEnergy = np.genfromtxt(pathToYield, skip_header=18, usecols=(0, 8))
+    yieldPerEnergy = np.genfromtxt(pathToYield, skip_header=18, usecols=(0, 9))
 
     #  set energy to eV
     yieldPerEnergy[:, 0] = yieldPerEnergy[:, 0] * 1000000.0
@@ -105,7 +105,7 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     IgnoredFiles = []
     for f in files:
         if isfile(join(pathToFluxes, f)) and f.endswith(".dta"): 
-            """prepares old Spctra data set"""
+            """prepares old Spectra data set"""
             print(f)
             fo= open(f, "r")
             lines = list(fo)
@@ -154,7 +154,7 @@ def find_nearest(array, value):
 
 
 def photons_per_energy_bucket(fluxData,bucketSize):
-    """Removes the bandwidth term by multipying the flux density with the bandwidth and dividing it by the bucket size. I.e. changes the fluy density form [ph/s/mr^2/0.1%] to [ph/s/mr^2/bucket] """
+    """Removes the bandwidth term by multipying the flux density with the bandwidth and dividing it by the bucket size. I.e. changes the fluxS density form [ph/s/mr^2/0.1%] to [ph/s/mr^2/bucket] """
     for data in fluxData:
         if type(data)== str:
             Energy = float(data)
@@ -391,7 +391,7 @@ def normalize(data):
     norm = (data-data.min())/(data.max()-data.min())
     return norm
 
-def saveToCSV(x,y,z,unit):
+def saveToCSV(x, y, z, unit='mm'):
     d= {'x horizontal '+unit: x, 'y horizontal '+unit: y, 'z weighted flux [arb.]': z}
     df = pd.DataFrame(data=d)
     df.to_csv(title + '.csv')
