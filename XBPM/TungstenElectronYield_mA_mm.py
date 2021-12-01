@@ -222,17 +222,6 @@ def multiply_flux_with_yield(fluxData, yieldPerEnergyData):
     return fluxData
 
 
-def summ_all_weighted_fluxes(weightedFluxes):
-    """summs up all yields per coordinate over the whole energy range"""
-    i=0
-    summedFluxes= weightedFluxes[1]
-    for fluxPerEnergy in weightedFluxes:
-        if i & 1 and i > 1: #only the arrays (odds)
-            summedFluxes[:,2]= fluxPerEnergy[:,2]+summedFluxes[:,2]
-        i=i+1
-    return summedFluxes
-
-
 def integrate_all_weigthed_fluxes(weightedFluxes):
     """integrates all yields per cooridinate over the whole energy range"""
     i=0
@@ -267,7 +256,7 @@ def integrate_all_weigthed_fluxes(weightedFluxes):
     return demo
 
 def flux_per_mm_sqr(weightedFluxes, distanceFromSource):
-    weightedFluxes[:,2]=weightedFluxes[:,2]/ distanceFromSource**2
+    weightedFluxes[:,2]=weightedFluxes[:,2]/ (plotDistance)**2
     return weightedFluxes
 
 
@@ -324,40 +313,6 @@ def plot_top_view(x,y,z,txt=''):
     else:
         plt.show()
         plt.clf()
-
-
-def plot2D_bu(x, y, z,txt=''):
-    """Depercated Function"""
-    fname = title + '_2D' + txt + '.png' 
-    xmax= np.max(x)
-    ymax= np.max(y)
-    xmin= np.min(x)
-    ymin= np.min(y)
-    nx = len(x)
-    ny= len(y)
-    
-    #xi = np.linspace(-5, 5, nx)
-    #yi = np.linspace(-5, 5, ny)
-    xi = np.linspace(xmin, xmax, nx)
-    yi = np.linspace(ymin, ymax, ny)
-    zi = ml.griddata(x, y, z, xi, yi)
-    ax = plt.contourf(xi, yi, zi, 15, colors = 'k')
-    plt.pcolormesh(xi, yi, zi, cmap = plt.get_cmap('rainbow'))
-    plt.colorbar() 
-    #plt.scatter(x, y, marker = 'o', c = 'b', s = 5, zorder = 10)
-    #plt.scatter(x, y, c = 'b', s = 5, zorder = 10)
-    #plt.xlim(-0.5,0.5)
-    #plt.ylim(-0.5, 0.5)
-    plt.xlim(xmin, xmax)
-    plt.ylim(ymin, ymax)
-    if autoSave == True:
-        plt.savefig(fname)
-        plt.close()
-        plt.clf()
-    else:
-        plt.show()
-        plt.clf()
-    #  see: https://stackoverflow.com/questions/13781025/matplotlib-contour-from-xyz-data-griddata-invalid-index
 
 
 def plot2D(x, y, z, txt='', unit=''):
@@ -452,7 +407,6 @@ if __name__ == '__main__':
     print( str(noEnergies) +' energy data sets read in.')
     fluxData = photons_per_energy_bucket(fluxData, bucketSize)
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
-    #allFluxes= summ_all_weighted_fluxes(fluxDataYielded)
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
@@ -460,15 +414,15 @@ if __name__ == '__main__':
     #plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
-    if mrad == True:
+    if mrad == True: #Z axis is allways per mm since flux_per_mm_sqr() is used
             plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],'','mrad')
             plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, normalize(allFluxes[:,2]),'_Norm','mrad')
             plot2D_Log(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],'_Log','mrad')
             #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mrad')
-    else: 
-            plot2D(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, allFluxes[:,2]/plotDistance**2,'','mm')
-            plot2D(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, normalize(allFluxes[:,2])/plotDistance**2,'_Norm','mm')
-            plot2D_Log(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, allFluxes[:,2]/plotDistance**2,'_Log','mm')
+    else: #Z axis is allways per mm since flux_per_mm_sqr() is used
+            plot2D(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, allFluxes[:,2],'','mm')
+            plot2D(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, normalize(allFluxes[:,2]),'_Norm','mm')
+            plot2D_Log(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, allFluxes[:,2],'_Log','mm')
             #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mm')
 
 '''
