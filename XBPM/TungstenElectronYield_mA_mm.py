@@ -25,13 +25,13 @@ import json
 #CONFIGURATION
 CRXO = False #Select source type for Yield data. If True, source is X-Ray Attenuation Length from CRXO website if false it is from Evaluated Nuclear Data File Libary
 if CRXO == True:
-    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\W_Stiched.txt"
+    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\W.txt"
 else:
     pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\EPDL97_74.dat"
 pathToFluxes = r"E:\Spectra\02_U14_SLS2.0\01_RawData\SLS1"
 #title = path.dirname(pathToFluxes)+'SiC'
 #title = path.basename(title)'
-title = 'U14 @ SLS (K1.46,N120) Current Density @ 8.6 m'
+title = 'U14 @ SLS (K1.46,N120) Current Density @ 8.6 m crxo'
 autoSave = True # Set True to automatically save the plots in pathToFluxes
 yLabel = "Current density [mA/mm^2]"
 maxEnergy = 30000.0  # eV given by flux calculations
@@ -44,47 +44,6 @@ calibrationFactor = 1.8E-8 #Factor that calibrates the photo electric cross sect
 ec = 1.602e-19 #elementary charge [C]
 #CONFIGURATION ENDS HERE
 
-
-def prepare_yield_data_CRXO(pathToYield):
-    """Reads in the electron yield file, converts the attenuation length to cross section to mm²/g, removes unneeded vallues and returns a data set with (energy [eV]:cross section [mm²/g])"""
-    yieldPerEnergy = []
-    yieldPerEnergy = np.genfromtxt(pathToYield, skip_header=2, usecols=(0, 1))
-    correctionFactor = 5
-    #  set energy to eV
-    yieldPerEnergy[:, 0] = yieldPerEnergy[:, 0]
-    #  transpose Attenuation Length to photoinonaization crosssection
-    yieldPerEnergy[:, 1] = 1 / yieldPerEnergy[:, 1] * correctionFactor
-    # remove energies lower than min and higher than max
-    i=0
-    for E in yieldPerEnergy[:,0]:
-        if E < minEnergy or E > maxEnergy:
-            yieldPerEnergy = np.delete(yieldPerEnergy, i, 0)
-            i=i-1
-        i=i+1
-    if np.isnan(yieldPerEnergy[0]).any():
-        yieldPerEnergy= np.delete(yieldPerEnergy,0,0)
-    return(yieldPerEnergy)
-
-
-def prepare_yield_data(pathToYield):
-    """Reads in the electron yield file, converts energies to eV instead of MeV and the cross section to mm²/g instead of cm²/g, removes unneeded vallues and returs a data set with (energy [eV]:cross section [mm²/g]"""
-    yieldPerEnergy = []
-    yieldPerEnergy = np.genfromtxt(pathToYield, skip_header=18, usecols=(0, 9))
-
-    #  set energy to eV
-    yieldPerEnergy[:, 0] = yieldPerEnergy[:, 0] * 1000000.0
-    #  set yield to mm²
-    yieldPerEnergy[:, 1] = yieldPerEnergy[:, 1] / 100
-    # remove energies lower than min and higher than max
-    i=0
-    for E in yieldPerEnergy[:,0]:
-        if E < minEnergy or E > maxEnergy:
-            yieldPerEnergy = np.delete(yieldPerEnergy, i, 0)
-            i=i-1
-        i=i+1
-    if np.isnan(yieldPerEnergy[0]).any():
-        yieldPerEnergy= np.delete(yieldPerEnergy,0,0)
-    return(yieldPerEnergy)
 
 def prepare_yield_data_CRXO_cal(pathToYield):
     """Reads in the electron yield file, converts the attenuation length to cross section to mm²/g, removes unneeded vallues and returns a data set with (energy [eV]:cross section [mm²/g])"""
@@ -398,10 +357,8 @@ def saveToCSV(x, y, z, unit='mm'):
 
 if __name__ == '__main__':
     if CRXO == True:
-        yieldPerEnergy = prepare_yield_data_CRXO(pathToYield)
-        #yieldPerEnergy = prepare_yield_data_CRXO_cal(pathToYield)
+        yieldPerEnergy = prepare_yield_data_CRXO_cal(pathToYield)
     else:
-        #yieldPerEnergy = prepare_yield_data(pathToYield)
         yieldPerEnergy = prepare_yield_data_cal(pathToYield)
     fluxData, noEnergies = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
     print( str(noEnergies) +' energy data sets read in.')
@@ -409,7 +366,6 @@ if __name__ == '__main__':
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
-    #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     #plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
     #plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
     #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
