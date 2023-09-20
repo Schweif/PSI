@@ -10,38 +10,38 @@
 import numpy as np
 from os import listdir, chdir, path
 from os.path import isfile, join
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm, ticker
+from matplotlib import cm
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-import matplotlib.mlab as ml
 import scipy
-from scipy import integrate
 import re
 import pandas as pd
 import json
-
+from shutil import copy
 
 #CONFIGURATION
 CRXO = False #Select source type for Yield data. If True, source is X-Ray Attenuation Length from CRXO website if false it is from Evaluated Nuclear Data File Libary
 if CRXO == True:
-    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\W.txt"
+    pathToYield = path.dirname(path.realpath(__file__))+r".\RawData\W.txt"
 else:
-    pathToYield = r"U:\05_InsertionDevices\BerchnungenFürXBPMs\Attenuations_e-_crosssections\EPDL97_74.dat"
-pathToFluxes = r"E:\Spectra\02_U14_SLS2.0\01_RawData\SLS1"
-#title = path.dirname(pathToFluxes)+'SiC'
-#title = path.basename(title)'
-title = 'U14 @ SLS (K1.46,N120) Current Density @ 8.6 m crxo'
+    #pathToYield = path.dirname(path.realpath(__file__))+r".\RawData\EPDL97_74.dat"
+    pathToYield = r"C:\Users\just_d\Documents\Python Scripts\XBPM\Raw Data\Yield\EPDL97_74.dat"
+           
+ 
+pathToFluxes =  r"H:\00_final files\IDFE\X04SFE\07_SLS2.0\03_Calculations\03_XBPMS\01_U14_K1.6_X04S_final\02_FluxDensityRaw"
+title = 'U14 @SLS2 (K1.6,N200) 9.7 m ctrl'
 autoSave = True # Set True to automatically save the plots in pathToFluxes
 yLabel = "Current density [mA/mm^2]"
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 30.0  # eV given by yield table
-distanceFromSource = 10  # m distance from source at which the flux was calculated
-plotDistance = 8.58 # m distance from source at which the result is wanted
+distanceFromSource = 9.7  # m distance from source at which the flux was calculated
+plotDistance = distanceFromSource # m distance from source at which the result is wanted
 bucketSize = 1 #  eV
 mrad = False #Sets X and Y axis in Plots to mrad. Set to False if X and Y axis in plots should be mm at distanceFromSource
 calibrationFactor = 1.8E-8 #Factor that calibrates the photo electric cross section * energy [cm2*eV/g] to yield [e-/ph]
 ec = 1.602e-19 #elementary charge [C]
+exampleFluxDensData = path.dirname(path.realpath(__file__))+r".\RawData\TestDataSets\SmallDataSet"
+maxZ=30 #Defines the maximum level of the Z axis. I.e. higher vallues than maxZ will be read in the plot, set to 0 if not used
 #CONFIGURATION ENDS HERE
 
 
@@ -99,6 +99,9 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     returns a data set with the format (Energy[eV],[x[mm],y[mm],flux[ph/s/mr^2/0.1%]]) all data in one set
     returns the number of energies in the data set i.e. how many [x[mm],y[mm],flux[ph/s/mr^2/0.1%]] arrays are present
     """
+    if not path.exists(pathToFluxes):
+            pathToFluxes = exampleFluxDensData
+            print('ATTTENTION: Raw flux density data not found. Using example data set instead')
     chdir(pathToFluxes)
     da = []
     i = 0
@@ -120,7 +123,7 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
                 da.append(np.genfromtxt(f, skip_header=10, usecols=(0, 1, 2)))
                 i=i+1
         if  isfile(join(pathToFluxes, f)) and f.endswith(".json"):
-            """prepares Spectra V11 and grater data sets"""
+            """prepares Spectra V11 and greater data sets"""
             with open(f) as v:
                 data = json.load(v)
                 if 'Output' in data:
@@ -193,9 +196,6 @@ def integrate_all_weigthed_fluxes(weightedFluxes):
         i=i+1
     energies = np.asarray(energies)
     j=0 # itteration per coordinate
-    len_j =len(demo)
-    len_ii= len(energies)
-    len_i = len(weightedFluxes)
     yarray = np.zeros((len(demo),len(energies)))
     while j < len(demo): #go throu all coordinates
         i=0 # itteration per energyVallue and arrays        
@@ -238,7 +238,7 @@ def plot3D(x, y, z,txt=''):
     #plt.ylim(-0.5,0.5)
     #plt.axis('scaled')
     if autoSave == True:
-        plt.savefig(fname)
+        plt.savefig(fname, dpi = 1200)
         plt.clf()
     else:
         plt.show()
@@ -266,7 +266,7 @@ def plot_top_view(x,y,z,txt=''):
     ax.elev = 90
     plt.axis('scaled')
     if autoSave == True:
-        plt.savefig(fname)
+        plt.savefig(fname, dpi = 1200)
         plt.close()
         plt.clf()
     else:
@@ -274,14 +274,13 @@ def plot_top_view(x,y,z,txt=''):
         plt.clf()
 
 
-def plot2D(x, y, z, txt='', unit=''):
+def plot2D_BackUp(x, y, z, txt='', unit=''):
     fname = title + '_2D' + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
     xmin= np.min(x)
     ymin= np.min(y)
-    nx = len(x)
-    ny= len(y)
+
     X, Y = np.meshgrid(x, y)
     #Rearrange Data for Image Plot
     N = int(len(z)**.5)
@@ -300,7 +299,46 @@ def plot2D(x, y, z, txt='', unit=''):
     cbar = plt.colorbar(im, ax=ax)
     cbar.ax.set_ylabel(yLabel)
     if autoSave == True:
-        plt.savefig(fname)
+        plt.savefig(fname, dpi = 1200)
+        plt.close()
+        plt.clf()
+    else:
+        plt.show()
+        plt.clf()
+
+
+def plot2D(x, y, z, txt='', unit='', zMax=0):
+    fname = title + txt + '.png' 
+    xmax= np.max(x)
+    ymax= np.max(y)
+    xmin= np.min(x)
+    ymin= np.min(y)
+    X, Y = np.meshgrid(x, y)
+    #Rearrange Data for Image Plot
+    N = int(len(z)**.5)
+    Z = z.reshape(N, N)
+
+    fig, ax = plt.subplots()
+    if zMax != 0:
+        im = ax.imshow(Z,
+                       cmap=cm.rainbow, 
+                       interpolation=  'bilinear', #'none',
+                       origin='lower', extent=[xmin, xmax, ymin, ymax],
+                       vmax=zMax, vmin=-z.min())
+    else:
+        im = ax.imshow(Z,
+                       cmap=cm.rainbow, 
+                       interpolation=  'bilinear', #'none',
+                       origin='lower', extent=[xmin, xmax, ymin, ymax],
+                       vmax=z.max(), vmin=-z.min())                   
+    
+    plt.title(fname,pad=25)
+    plt.xlabel('x, position hor. ' +unit)
+    plt.ylabel('y, position ver. ' +unit)
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.ax.set_ylabel(yLabel)
+    if autoSave == True:
+        plt.savefig(fname, dpi = 1200)
         plt.close()
         plt.clf()
     else:
@@ -309,26 +347,23 @@ def plot2D(x, y, z, txt='', unit=''):
  
     
 def plot2D_Log(x, y, z, txt='', unit=''):
-    fname = title + '_2D' + txt + '.png' 
+    fname = title + txt + '.png' 
     xmax= np.max(x)
     ymax= np.max(y)
     xmin= np.min(x)
     ymin= np.min(y)
-    nx = len(x)
-    ny= len(y)
     X, Y = np.meshgrid(x, y)
 
     N = int(len(z)**.5)
     Z = z.reshape(N, N)
-
 
     fig, ax = plt.subplots()
     im = ax.imshow(Z, 
                    norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
                    cmap=cm.rainbow, 
                    interpolation=  'bilinear', #'none',
-                   origin='lower', extent=[xmin, xmax, ymin, ymax],
-                   vmax=z.max(), vmin=z.min())
+                   origin='lower', extent=[xmin, xmax, ymin, ymax]
+                   )
     
     plt.title(fname,pad=25)
     plt.xlabel('x, position hor. ' +unit)
@@ -336,7 +371,7 @@ def plot2D_Log(x, y, z, txt='', unit=''):
     cbar = plt.colorbar(im, ax=ax)
     cbar.ax.set_ylabel(yLabel)
     if autoSave == True:
-        plt.savefig(fname)
+        plt.savefig(fname, dpi = 1200)
         plt.close()
         plt.clf()
     else:
@@ -349,13 +384,18 @@ def normalize(data):
     return norm
 
 def saveToCSV(x, y, z, unit='mm'):
-    d= {'x horizontal '+unit: x, 'y horizontal '+unit: y, 'z weighted flux [arb.]': z}
+    d= {'x horizontal '+unit: x, 'y horizontal '+unit: y, yLabel : z}
     df = pd.DataFrame(data=d)
     df.to_csv(title + '.csv')
-
+    
+def saveToXLSX(x, y, z, unit='mm'):
+    d= {'x horizontal '+unit: x, 'y horizontal '+unit: y, yLabel : z}
+    df = pd.DataFrame(data=d)
+    df.to_excel(title + '.xlsx')
 
 
 if __name__ == '__main__':
+    script = path.abspath(__file__) 
     if CRXO == True:
         yieldPerEnergy = prepare_yield_data_CRXO_cal(pathToYield)
     else:
@@ -366,23 +406,17 @@ if __name__ == '__main__':
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
     allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
-    #plot3D(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2])
-    #plot3D(allFluxes[:,0], allFluxes[:,1], normalize(allFluxes[:,2]),'_Norm')
-    #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], allFluxes[:, 2])
-    #plot_top_view(allFluxes[:, 0], allFluxes[:, 1], normalize(allFluxes[:,2]))
     if mrad == True: #Z axis is allways per mm since flux_per_mm_sqr() is used
             plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],'','mrad')
             plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, normalize(allFluxes[:,2]),'_Norm','mrad')
             plot2D_Log(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],'_Log','mrad')
-            #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mrad')
     else: #Z axis is allways per mm since flux_per_mm_sqr() is used
             plot2D(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, allFluxes[:,2],'','mm')
             plot2D(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, normalize(allFluxes[:,2]),'_Norm','mm')
             plot2D_Log(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, allFluxes[:,2],'_Log','mm')
-            #saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mm')
-
-'''
-x = allFluxes[:,0]
-y = allFluxes[:,1]
-z = allFluxes[:,2]
-'''
+            saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mm')
+            saveToXLSX(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mm')
+            if maxZ != 0:
+                plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],' crpt @' +str(maxZ),'mrad', maxZ)
+                print('4')
+    copy(script, title +'.py') #save a coppy of the script allong with the plots for quality control
