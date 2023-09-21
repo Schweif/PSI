@@ -28,19 +28,19 @@ else:
     pathToYield = r"C:\Users\just_d\Documents\Python Scripts\XBPM\Raw Data\Yield\EPDL97_74.dat"
            
  
-pathToFluxes =  r"H:\00_final files\IDFE\X04SFE\07_SLS2.0\03_Calculations\03_XBPMS\01_U14_K1.6_X04S_final\02_FluxDensityRaw"
-title = 'U14 @SLS2 (K1.6,N200) 9.7 m ctrl'
+pathToFluxes =  r"H:\00_final files\IDFE\X11MFE\5_SLS2.0\02_Berechnungen\02_XBPM\FluxDensity\01_LH\Raw"
+title = 'UE36kn Test verified calculation'
 autoSave = True # Set True to automatically save the plots in pathToFluxes
 yLabel = "Current density [mA/mm^2]"
 maxEnergy = 30000.0  # eV given by flux calculations
 minEnergy = 30.0  # eV given by yield table
-distanceFromSource = 9.7  # m distance from source at which the flux was calculated
-plotDistance = distanceFromSource # m distance from source at which the result is wanted
+distanceFromSource = False #  m distance from source at which the flux was calculated, if False distance will be extracted from SPECTRAs .json,
+plotDistance = False  # m distance from source at which the result is wanted, if False distanceFromSource will be taken
 bucketSize = 1 #  eV
 mrad = False #Sets X and Y axis in Plots to mrad. Set to False if X and Y axis in plots should be mm at distanceFromSource
 calibrationFactor = 1.8E-8 #Factor that calibrates the photo electric cross section * energy [cm2*eV/g] to yield [e-/ph]
 ec = 1.602e-19 #elementary charge [C]
-exampleFluxDensData = path.dirname(path.realpath(__file__))+r".\RawData\TestDataSets\SmallDataSet"
+exampleFluxDensData = r"U:\10_Skripts\XBPM\RawData\TestDataSets\SmallDataSet\UE36kn_mm2"
 maxZ=30 #Defines the maximum level of the Z axis. I.e. higher vallues than maxZ will be read in the plot, set to 0 if not used
 #CONFIGURATION ENDS HERE
 
@@ -105,6 +105,7 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
     chdir(pathToFluxes)
     da = []
     i = 0
+    y = 0
     files = listdir(pathToFluxes)
     files = sorted_aphanumeric(files)
     IgnoredFiles = []
@@ -127,6 +128,9 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
             with open(f) as v:
                 data = json.load(v)
                 if 'Output' in data:
+                    if y == 0:
+                        dist_from_source, mr2_or_mm2 = getSettingsFromSpectraFiles(data)
+                    y = y + 1
                     print(f)
                     Energy = data['Output']['Set Value']
                     if Energy >= minEnergy and Energy <= maxEnergy:
@@ -148,7 +152,7 @@ def read_flux_data(pathToFluxes, minEnergy, maxEnergy):
             IgnoredFiles.append(f)       
     noEnergies = i
     print('Ignored files: ',IgnoredFiles)
-    return(da, noEnergies)
+    return(da, noEnergies, dist_from_source, mr2_or_mm2)
 
 
 def find_nearest(array, value):
@@ -336,6 +340,9 @@ def plot2D(x, y, z, txt='', unit='', zMax=0):
     plt.xlabel('x, position hor. ' +unit)
     plt.ylabel('y, position ver. ' +unit)
     cbar = plt.colorbar(im, ax=ax)
+    #ToDO yLabel in Normalized plot is wrong
+    #if txt == '_Norm':
+    #    yLabel = 'Power denstiy AU'
     cbar.ax.set_ylabel(yLabel)
     if autoSave == True:
         plt.savefig(fname, dpi = 1200)
@@ -393,6 +400,23 @@ def saveToXLSX(x, y, z, unit='mm'):
     df = pd.DataFrame(data=d)
     df.to_excel(title + '.xlsx')
 
+def getSettingsFromSpectraFiles(data): 
+    """Extracts the distance to source at which the Spectra calculation was performed and 
+    finds out wheteher the flux density was stored as ph/s/mr^2/0.1%B.W. or ph/s/mm^2/0.1%B.W. in the Spectra data files (.json)
+    input being a read in .json (data = json.load(f); f = open('FluxDensity-22_0.json')"""
+                                 
+    dist_from_source = data['Input']['Configurations']['Distance from the Source (m)']
+    mr2_or_mm2 = data['Output']['units'][2]
+    if 'mm^2' in mr2_or_mm2:
+        mr2_or_mm2 = 'mm2'
+    elif 'mr^2' in mr2_or_mm2:
+        mr2_or_mm2 = 'mr2'
+    else:
+       print('Warning could not determine if flux is ph/s/mr^2/0.1%B.W. or ph/s/mm^2/0.1%B.W.') 
+    return(dist_from_source,mr2_or_mm2)
+       
+    
+        
 
 if __name__ == '__main__':
     script = path.abspath(__file__) 
@@ -400,12 +424,17 @@ if __name__ == '__main__':
         yieldPerEnergy = prepare_yield_data_CRXO_cal(pathToYield)
     else:
         yieldPerEnergy = prepare_yield_data_cal(pathToYield)
-    fluxData, noEnergies = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
+    fluxData, noEnergies, dist_from_source, mr2_or_mm2 = read_flux_data(pathToFluxes, minEnergy, maxEnergy)
+    if not distanceFromSource:
+        distanceFromSource = dist_from_source
+    if not plotDistance:
+        plotDistance = distanceFromSource 
     print( str(noEnergies) +' energy data sets read in.')
     fluxData = photons_per_energy_bucket(fluxData, bucketSize)
     fluxDataYielded = multiply_flux_with_yield(fluxData,yieldPerEnergy)
     allFluxes= integrate_all_weigthed_fluxes(fluxDataYielded)
-    allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
+    if mr2_or_mm2 == 'mr2':
+        allFluxes = flux_per_mm_sqr(allFluxes, distanceFromSource)
     if mrad == True: #Z axis is allways per mm since flux_per_mm_sqr() is used
             plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],'','mrad')
             plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, normalize(allFluxes[:,2]),'_Norm','mrad')
@@ -417,6 +446,6 @@ if __name__ == '__main__':
             saveToCSV(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mm')
             saveToXLSX(allFluxes[:,0], allFluxes[:,1], allFluxes[:,2],'mm')
             if maxZ != 0:
-                plot2D(allFluxes[:,0]/distanceFromSource, allFluxes[:,1]/distanceFromSource, allFluxes[:,2],' crpt @' +str(maxZ),'mrad', maxZ)
-                print('4')
+                plot2D(allFluxes[:,0]/distanceFromSource*plotDistance, allFluxes[:,1]/distanceFromSource*plotDistance, allFluxes[:,2],' crpt @' +str(maxZ),'mm', maxZ)
     copy(script, title +'.py') #save a coppy of the script allong with the plots for quality control
+
