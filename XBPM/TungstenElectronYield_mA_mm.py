@@ -328,13 +328,13 @@ def plot2D(x, y, z, txt='', unit='', zMax=0):
                        cmap=cm.rainbow, 
                        interpolation=  'bilinear', #'none',
                        origin='lower', extent=[xmin, xmax, ymin, ymax],
-                       vmax=zMax, vmin=-z.min())
+                       vmax=zMax, vmin=z.min())
     else:
         im = ax.imshow(Z,
                        cmap=cm.rainbow, 
                        interpolation=  'bilinear', #'none',
                        origin='lower', extent=[xmin, xmax, ymin, ymax],
-                       vmax=z.max(), vmin=-z.min())                   
+                       vmax=z.max(), vmin=z.min())                   
     
     plt.title(fname,pad=25)
     plt.xlabel('x, position hor. ' +unit)
